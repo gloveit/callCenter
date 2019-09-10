@@ -1,0 +1,113 @@
+<template>
+  <div class="content">
+    <div class="common">
+      <div class="filter">
+      <span class="label">
+        坐席名称
+      </span>
+        <el-input v-model="agentAccounts" placeholder="请输入" style="width: 15%;margin-right: 30px;"></el-input>
+        <span class="label">留言时间</span>
+        <el-date-picker v-model="beginDate" type="datetime" placeholder="选择日期时间"  format="yyyy-MM-dd  HH:mm:ss"  value-format="yyyy-MM-dd HH:mm:ss" default-time="12:00:00"></el-date-picker>
+        <span class="label">至</span>
+        <el-date-picker v-model="endDate" type="datetime" placeholder="选择日期时间"  format="yyyy-MM-dd  HH:mm:ss"  value-format="yyyy-MM-dd HH:mm:ss" default-time="12:00:00"></el-date-picker>
+        <el-button type="primary" plain style="margin-left: 30px;" @click="find">查询</el-button>
+      </div>
+      <div style="height: 88%;">
+        <el-table highlight-current-row border id="agentMonitor" :data="tableData" style="width: 100%" :height="tableHeight">
+          <el-table-column type="index"></el-table-column>
+          <el-table-column prop="agent_acount" label="坐席名称" width="120" :formatter="acount"></el-table-column>
+          <el-table-column prop="first_login_time" label="当日首次登陆" width="180"></el-table-column>
+          <el-table-column prop="last_logout_time" label="当日末日登出" width="180"></el-table-column>
+          <el-table-column prop="sum_online" label="在线时长"></el-table-column>
+          <el-table-column prop="sum_talking" label="通话时长"></el-table-column>
+          <el-table-column prop="sum_acw" label="事后处理时长"></el-table-column>
+          <el-table-column prop="sum_busy" label="忙时长"></el-table-column>
+          <el-table-column prop="sum_inviting" label="振铃时长"></el-table-column>
+          <el-table-column prop="inbound_service_count" label="呼入总次数总和" width="120"></el-table-column>
+          <el-table-column prop="outbound_service_count" label="呼出总次数总和" width="120"></el-table-column>
+        </el-table>
+      </div>
+      <!--<div style="float: right;">-->
+        <!--<el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"-->
+                       <!--:page-size="pageSize" layout="total, prev, pager, next, jumper" :total="dataCount">-->
+        <!--</el-pagination>-->
+      <!--</div>-->
+    </div>
+  </div>
+</template>
+
+<script>
+  export default {
+    data() {
+      return {
+        tableHeight:"100%",
+        agentAccounts:'',
+        beginDate:'',
+        endDate:'',
+        tableData: [],
+      }
+    },
+    methods:{
+      monitor:function(){
+        let that=this;
+        that.axios.get('/agent/workStat?agentAccounts='+that.agentAccounts+'&beginDate='+that.beginDate+'&endDate='+that.endDate).then(function (response) {
+          that.tableData=response.data.date.list;
+          that.dataCount=response.data.date.total;
+        }).catch(function (error) {
+          console.log(error);
+        });
+      },
+      find:function(){
+        let agentAccounts=this.agentAccounts;
+        if(this.beginDate == null ){
+          this.beginDate = "";
+        }
+        if(this.endDate == null ){
+          this.endDate = "";
+        }
+        this.monitor();
+      },
+      handleEdit(index, row) {
+        console.log(row.status);
+        if(row.status = "1"){
+        }
+      },
+      handleDelete(index, row) {
+        console.log(index, row);
+      },
+      acount:function(row, column){
+        let acountt = row.agent_acount;
+        let index=acountt.lastIndexOf("\.");
+        acountt=acountt.substring(index+1,acountt.length);
+        return row.agent_acount = acountt;
+      }
+    },
+    mounted(){
+      this.monitor();
+    }
+  }
+</script>
+
+<style scoped>
+  .content{
+    width: 100%;
+    height:100%;
+    overflow:hidden;
+    background: #ffffff;
+    position: relative;
+    padding-top: 10px;
+    z-index: 1;
+  }
+  .common{
+    width: 96%;
+    height:100%;
+    margin: 0px auto;
+  }
+  .filter{
+    margin-bottom: 10px;
+    height: 40px;
+  }
+  .label{
+    color:#909399;
+  }
+</style>

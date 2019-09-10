@@ -1,0 +1,135 @@
+import Vue from 'vue'
+let VueApp = null;
+import App from './App'
+import router from './router'
+import '@/assets/js/win.js'
+import '@/assets/css/style.css'
+import vuescroll from 'vuescroll/dist/vuescroll-native';
+import 'vuescroll/dist/vuescroll.css';
+Vue.use(vuescroll);
+import store from './vuex'
+import { Table } from 'element-ui';
+import { TableColumn } from 'element-ui';
+import { Input } from 'element-ui';
+import { Message } from 'element-ui';
+import { MessageBox } from 'element-ui';
+Vue.config.productionTip = false;
+Vue.use(Table);
+Vue.use(TableColumn);
+Vue.use(Input);
+Message.install = function (Vue, options) {
+  Vue.prototype.$message = Message
+}
+Vue.prototype.$msgbox = MessageBox;
+Vue.prototype.$confirm = MessageBox.confirm;
+Vue.use(Message);
+
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+Vue.use(VueAxios, axios)
+
+router.beforeEach((to, from, next) => {
+  let a = to.name;
+  if(store.state.authList[a]){
+    next();
+  }else{
+    Message.info("您访问的页面不存在");
+  }
+})
+
+axios.interceptors.request.use(config => {
+  return config;
+}, err => {
+  Message.error("连接失败！")
+  return Promise.resolve(err);
+})
+
+axios.interceptors.response.use((response) => {
+  if(response.data.msg == "未登陆!"){
+    VueApp.$root.clearUser();
+    router.push({path:"/login"});
+  }else{
+    return response;
+  }
+}, function (error) {
+  console.log("请求错误",error.response)
+  if (401 === error.response.status) {
+    // router.push({path:"/login"})
+  }else {
+    return Promise.reject(error);
+  }
+});
+
+window.onresize = function(){
+  location.reload();
+}
+
+VueApp = new Vue({
+  el: '#app',
+  router,
+  store,
+  components: { App },
+  template: '<App/>',
+  methods:{
+    getMenu(callback){
+      this.axios({
+        method:"get",
+        url:"/config/sysmenu",
+      }).then((res)=>{
+        //权限测试数据
+        // let authl = {
+        //   login:true,
+        //   home:true,
+        //   callRecords:false
+        // }
+        //菜单测试数据
+        // let a = [
+        //   {iconCls:"menu_1",title:"系统首页",children:[{component:"home"}]},
+        //   {iconCls:"menu_2",title:"通话记录",children:[{component:"callRecords"}]},
+        // ]
+        let a = res.data;
+        //存放权限列表的数组
+        let bArr = [];
+        //菜单列表
+        let menuList = [];
+        let arrT = [];//临时变量
+        a.forEach((i1) => {
+          let arrT = [];
+          i1.children.forEach((i2) => {
+            if(i2.component){
+              bArr.push(i2.component);
+            }
+            arrT.push({path:i2.path,title:i2.name});
+          })
+          menuList.push({img:require("@/assets/imgs/"+i1.iconCls+".png"),title:i1.name,children:arrT});
+        })
+        //更新菜单列表
+        this.$store.state.menuList = menuList;
+        window.sessionStorage.setItem('menuList', JSON.stringify(menuList));
+        let objTemp = {};
+        bArr.forEach((i) => {
+          objTemp[i] = true
+        })
+        objTemp = {...objTemp,login:true,index:true,home:true}
+        //更新权限列表
+        this.$store.state.authList = objTemp;
+        window.sessionStorage.setItem('authList', JSON.stringify(objTemp));
+      })
+      if(typeof (callback) == "function"){
+        callback();
+      }
+    },
+    clearUser(){
+      this.$store.state.menuList = [];
+      window.clearSession('menuList')
+      this.$store.state.menu2Active = -1;
+      window.clearSession('menu2Active')
+      this.$store.state.tabViews = [];
+      window.clearSession('tabViews');
+      this.$store.state.tabViewActive = -1;
+      window.clearSession('tabViewActive')
+      this.$store.state.authList = {index:true, login:true, home:true,};
+      window.clearSession('authList')
+    }
+  }
+})

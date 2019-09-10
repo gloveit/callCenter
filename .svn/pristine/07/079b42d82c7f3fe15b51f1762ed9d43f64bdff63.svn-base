@@ -1,0 +1,99 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+
+Vue.use(Router);
+
+export default new Router({
+  routes: [
+    {
+      path: '/',
+      name: 'index',
+      component: () => import("@/components/index.vue"),
+      redirect:"/login",
+      children:[
+        {
+          path:"home",
+          name:"home",
+          component:() => import("@/components/home.vue"),
+        },
+        {
+          path:"callRecords",
+          name:"callRecords",
+          component:() => import("@/components/callRecords.vue")
+        },
+        {
+          path:"/workOrder",
+          name:"workOrder",
+          component:() => import("@/components/workOrder.vue"),
+          meta:{keepAlive:true}
+        },
+        {
+          path:"/workOrder1",
+          name:"workOrder1",
+          component:() => import("@/components/workOrder1.vue"),
+          meta:{keepAlive:true}
+        },
+        {
+          path:"/workOrderList",
+          name:"workOrderList",
+          component:() => import("@/components/workOrderList.vue")
+        },
+        {
+          path:"usermanage",
+          name:"userManage",
+          component:() => import("@/components/userManage.vue")
+        },
+        {
+          path:"menumanage",
+          name:"menuManage",
+          component:() => import("@/components/menuManage.vue")
+        },
+        {
+          path:"rolemanage",
+          name:"roleManage",
+          component:() => import("@/components/roleManage.vue")
+        },
+        {
+          path:"/messageRecord",
+          name:"messageRecord",
+          component:() => import("@/components/messageRecord.vue")
+        },
+        {
+          path:"/agentMonitoring",
+          name:"agentMonitoring",
+          component:() => import("@/components/agentMonitoring.vue"),
+        },
+        {
+          path:"/weChat",
+          name:"weChat",
+          component:() => import("@/components/weChat.vue")
+        },
+        {
+          path:"/knowledgeBase",
+          name:"knowledgeBase",
+          component:() => import("@/components/knowledgeBase.vue")
+        },
+        {
+          path:"/articleDetail",
+          name:"articleDetail",
+          component:() => import("@/components/articleDetail.vue")
+        },
+        {
+          path:"/addArticle",
+          name:"addArticle",
+          component:() => import("@/components/addArticle.vue")
+        },
+        {
+          path:"/changeArticle",
+          name:"changeArticle",
+          component:() => import("@/components/changeArticle.vue")
+        },
+      ]
+    },
+    {
+      path:"/login",
+      name:"login",
+      component:() => import("@/components/login.vue")
+    },
+  ]
+})

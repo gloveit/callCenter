@@ -1,0 +1,249 @@
+<template>
+    <div class="role">
+      <div class="role_left">
+        <el-row class="tool">
+          <el-tooltip content="添加" placement="top">
+            <el-button type="success" icon="el-icon-circle-plus" circle size='small' @click="addNode"></el-button>
+          </el-tooltip>
+          <el-tooltip content="修改" placement="top">
+            <el-button type="primary" icon="el-icon-edit" circle size='small' @click="changeDep"></el-button>
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top">
+            <el-button type="danger" icon="el-icon-delete" circle size='small' @click="removeDep"></el-button>
+          </el-tooltip>
+        </el-row>
+        <el-tree
+          :data="data"
+          :props="defaultProps"
+          accordion
+          :highlight-current="true"	
+          @node-click="handleNodeClick">
+        </el-tree>
+        <!-- 部门添加 -->
+        <el-dialog
+          title="部门添加"
+          :visible.sync="dialogVisible"
+          width="30%" >
+          <el-form :model="addmenu" :rules="rules" ref="addmenu" label-width="100px">
+            <el-form-item label="部门名称" prop="dename" style="width:280x;float:left">
+              <el-input v-model="addmenu.dename" style="width:180px" size="small"></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="sureDep">确 定</el-button>
+          </span>
+        </el-dialog>
+        <!-- 部门修改 -->
+        <el-dialog
+          title="部门修改"
+          :visible.sync="dialogChange"
+          width="30%" >
+          <el-form :model="changedep" :rules="changerules" ref="changedep" label-width="100px">
+            <el-form-item label="旧部门名称" prop="oldname" style="width:280x;float:left">
+              <el-input v-model="changedep.oldname" style="width:180px" size="small"   :disabled="true"></el-input>
+            </el-form-item>
+            <el-form-item label="新部门名称" prop="newname" style="width:280x;float:left">
+              <el-input v-model="changedep.newname" style="width:180px" size="small"></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogChange = false">取 消</el-button>
+            <el-button type="primary" @click="sureChangedep">确 定</el-button>
+          </span>
+        </el-dialog>
+      </div>
+      <div class="role_right">
+        <!-- <div class="con_icon">
+          <Input  icon="ios-search" placeholder="搜索用户" v-model="searchValue" style="width: 200px;float:left;margin-left:200px"/>
+          <Button type="primary" icon="ios-search" style="float:left;margin-left:20px" @click="serach">搜索</Button>
+          <Button type="primary"  style="float:right" @click="addUser"><Icon type="md-add" />添加用户</Button>
+        </div>
+        <div class="con_table">
+          <Table style="width:100%;height:65%;border:0px"  :columns="columns2" :data="testCol" placement="top" show-elevator class="userTable" no-filtered-data-text></Table>
+          <div style="margin: 10px;overflow: hidden">
+            <div style="float: right;">
+                <Page :total="reshuserLength" :current="1" @on-change="changePage" :page-size="pageSize"	></Page>
+            </div>
+          </div>
+        </div> -->
+        <usertable/>
+      </div>
+    </div>
+</template>
+
+<script>
+import usertable from './userTable.vue'
+export default {
+  name: 'userManage',
+  components:{
+    usertable
+  },
+  data() {
+      return {
+        parentnode:"",
+        dialogVisible:false,
+        dialogChange:false,
+        root:'',
+        node:'',
+        addmenu:{
+          dename:""
+        },
+        changedep:{
+          oldname:'',
+          newname:''
+        },
+        rules:{
+          dename: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
+        },
+        changerules:{
+          newname: [{ required: true, message: '请输入新部门名称', trigger: 'blur' }],
+        },
+        data: [{
+          label: '一级 1',
+          children: [{
+            label: '二级 1-1',
+            children: [{
+              label: '三级 1-1-1',
+              children:[]
+            }]
+          }]
+        }, {
+          label: '一级 2',
+          children: [{
+            label: '二级 2-1',
+            children: [{
+              label: '三级 2-1-1',
+              children:[]
+            }]
+          }, {
+            label: '二级 2-2',
+            children: [{
+              label: '三级 2-2-1'
+            }]
+          }]
+        }, {
+          label: '一级 3',
+          children: [{
+            label: '二级 3-1',
+            children: [{
+              label: '三级 3-1-1'
+            }]
+          }, {
+            label: '二级 3-2',
+            children: [{
+              label: '三级 3-2-1'
+            }]
+          }]
+        }],
+        defaultProps: {
+          children: 'children',
+          label:'label'
+        }
+      };
+    },
+  methods: {
+    handleNodeClick (data,node,root) {
+     this.parentnode = data;
+     this.node = node;
+     this.root = root;
+     this.changedep.oldname = data.label;
+    },
+    addNode () {
+       this.dialogVisible = true
+    },
+    // 确认部门添加
+    sureDep () {
+      let that = this;
+      let idep = that.addmenu.dename;
+      console.log(idep)
+      if(!idep){
+        this.$message({
+          showClose: true,
+          message: '添加部门失败'
+        })
+      }else{
+        that.parentnode.children.push({label:idep,children:[]})
+      }
+      this.dialogVisible = false
+    },
+    changeDep () {
+      console.log(this.parentnode.label)
+      this.dialogChange = true;
+    },
+    // 确认部门修改
+   sureChangedep () {
+      let that = this;
+      let name = that.changedep.newname;
+      console.log(name)
+      if(!name){
+        this.$message({
+          showClose: true,
+          message: '修改部门失败'
+        })
+      }else{
+        that.parentnode.label = name;
+        that.changedep.newname = ''
+      }
+      this.dialogChange = false
+   },
+   removeDep () {
+     const depname = this.parentnode.label;
+     this.$confirm('此操作将永久删除'+depname+'部门, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          const data = this.parentnode
+          const parent = this.node.parent;
+          const children = parent.data.children || parent.data;
+          const index = children.findIndex(d => d.id === data.id);
+          children.splice(index, 1);
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          });
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });          
+        });
+    // const data = this.parentnode
+    // const parent = this.node.parent;
+    // const children = parent.data.children || parent.data;
+    // const index = children.findIndex(d => d.id === data.id);
+    // children.splice(index, 1);
+   }
+  }
+}
+</script>
+
+<style scoped>
+.role{
+  width: 100%;
+  height: 100%;
+  display:flex;
+  flex-direction:row;
+}
+.role_left{
+ width:200px;
+ height: 100%;
+ background: #fff
+}
+.role_right{
+  flex:1;
+  width:100% ;
+  height: 100%;
+  float:left;
+  /* background: #f00 */
+}
+.tool{
+   padding-left:70px;
+   padding-top:10px;
+}
+.con_icon{
+  width: 100%;
+  margin-top:10px;
+}
+</style>

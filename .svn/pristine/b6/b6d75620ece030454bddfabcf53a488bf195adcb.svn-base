@@ -1,0 +1,179 @@
+<template>
+  <div class="contentAll">
+    <left-menu></left-menu>
+    <div class="box">
+      <status-bar></status-bar>
+      <div class="content">
+        <tab-views></tab-views>
+        <div class="mainBox">
+          <keep-alive>
+            <router-view v-if="$route.meta.keepAlive"/>
+          </keep-alive>
+          <router-view v-if="!$route.meta.keepAlive"></router-view>
+        </div>
+      </div>
+    </div>
+    <div class="call" v-if="callShow">
+      <div class="num">{{phone.num}}</div>
+      <div class="name">{{phone.title}}</div>
+      <div class="ico">
+        <div class="o" @click="reject">
+          <img src="@/assets/imgs/callOff.png" alt="">
+          <div class="zi">拒绝</div>
+        </div>
+        <div class="o" @click="accept">
+          <img src="@/assets/imgs/callOn.png" alt="">
+          <div class="zi">接受</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import leftMenu from "./leftMenu";
+import statusBar from "./statusBar";
+import tabViews from "./tabViews";
+export default {
+  name: 'HelloWorld',
+  data () {
+    return {
+    }
+  },
+  computed:{
+    menu2Show() {
+      return this.$store.state.menu2Show;
+    },
+    callShow(){
+      return this.$store.state.callShow;
+    },
+    phone(){
+      return this.$store.state.phone;
+    },
+  },
+  watch:{
+
+  },
+  components:{
+    leftMenu,statusBar,tabViews
+  },
+  methods:{
+    accept(){
+      if (!QPhoneTool.qPhone || !QPhoneTool.qPhone.currentCall) {
+        this.$message.info("当前没有可接听的电话");
+        return;
+      }
+      if (SAM.getACDEvent()
+        && SAM.getACDEvent().acdCall
+        && SAM.getACDEvent().acdCall.isVideo) {
+        var mode = QPhoneTool.webrtc ? "webrtc" : QPhoneTool.chrome ? "chrome" : "ie";
+        if (lastVideoWindow) {
+          lastVideoWindow.onbeforeunload = null;
+          lastVideoWindow.onunload = null;
+          lastVideoWindow.close();
+        }
+        lastVideoWindow  = openWindow("video/video.html?mode=" + mode + "&t=" + new Date().getTime(), "onesoulVideo", 700, 528);
+      }
+      else {
+        QPhoneTool.acceptCall();
+        this.$store.state.callShow = false;
+      }
+    },
+    reject(){
+      if (QPhoneTool.qPhone && QPhoneTool.qPhone.currentCall) {
+        QPhoneTool.qPhone.currentCall.Hangup();
+      }
+    },
+  },
+  mounted(){
+  }
+}
+</script>
+
+<style scoped>
+  .contentAll{
+    width:100%;
+    height:100%;
+    overflow: hidden;
+    position: relative;
+  }
+  .box{
+    width:95.2%;
+    height:100%;
+    float: left;
+  }
+  .content{
+    padding:10px;
+    height:90%;
+    background: #f0f1f6;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .content .menu2{
+    position:absolute;
+    z-index: 2;
+    left:0;
+    top:0;
+  }
+  .mainBox{
+    height:calc(100% - 36px);
+    width:100%;
+    box-sizing: border-box;
+    border:1px solid #D9D9D9;
+    box-shadow:0px 0px 9px 0px rgba(0,0,0,0.1),-2px 0px 9px 0px rgba(0,0,0,0.1),
+    0px 2px 9px 0px rgba(0,0,0,0.1),2px 0px 9px 0px rgba(0,0,0,0.1);
+  }
+  .call{
+    width:433px;
+    height:244px;
+    position:fixed;
+    z-index: 2;
+    top:0;bottom:0;left:0;right:0;margin:auto;
+    background:linear-gradient(225deg,rgba(51,51,51,0.85) 0%,rgba(0,0,0,0.85) 100%);
+    box-shadow:0px 0px 21px 0px rgba(0,0,0,0.2);
+    border-radius:10px;
+    font-size:20px;
+    font-family:MicrosoftYaHei;
+    color:rgba(255,255,255,1);
+  }
+  .call>.num{
+    width:100%;
+    height:26px;
+    line-height: 26px;
+    position:absolute;
+    top:37px;
+    text-align: center;
+  }
+  .call>.name{
+    width:100%;
+    height:26px;line-height: 26px;
+    position: absolute;
+    top:79px;
+    text-align: center;
+  }
+  .call>.ico{
+    width:100%;
+    height:82px;
+    position: absolute;
+    bottom:28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .call>.ico>.o{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    cursor: pointer;
+  }
+  .call>.ico>.o:first-child{
+    margin-right:80px;
+  }
+  .call>.ico>.o img{
+    height:63px;
+  }
+  .call>.ico>.o .zi{
+    font-size: 11px;
+  }
+</style>

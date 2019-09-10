@@ -1,0 +1,129 @@
+<template>
+  <div class="box">
+    <div class="box1">
+      <div class="head">客户综合信息</div>
+      <div class="content">
+        <kehu-detail></kehu-detail>
+      </div>
+    </div>
+    <div class="box1">
+      <div class="head">工单信息</div>
+      <div class="content">
+        <workOrderCom></workOrderCom>
+      </div>
+    </div>
+    <img src="@/assets/imgs/light_L.svg" class="showZsk" v-if="lightS" @click="showZsk(0,false)">
+    <img src="@/assets/imgs/light_H.svg" class="showZsk" v-if="!lightS" @click="showZsk('60%',true)">
+    <div class="zzKu" :style="{height:kuStyle}">
+      <router-view/>
+    </div>
+  </div>
+</template>
+
+<script>
+    import kehuDetail from "./kehuDetail.vue"
+    import workOrderCom from "./workOrderCom.vue"
+    export default {
+      name:"workOrder1",
+      data() {
+        return {
+          newGd:{
+            DZ:"",
+            YHID:"",
+            YHMC:"",
+            JSBM:"",
+            // GDH:"",
+            SJH:"",
+            JHRQ:"",
+            GDNR:"",
+          },
+          kuStyle:0,
+          lightS:false,
+        }
+      },
+      components:{
+        kehuDetail,workOrderCom
+      },
+      methods:{
+        getUserInfo(){
+          this.axios({
+            method:"get",
+            url:"/dc/getUserInfo",
+            params:{
+              YHLY:1,
+              TJLX:1,
+              TJ:124600060200200
+            }
+          }).then((res) => {
+
+          })
+        },
+        showZsk(s,t){
+          this.kuStyle = s;
+          this.lightS = t;
+        },
+      },
+      mounted(){
+
+      }
+    }
+
+</script>
+
+<style lang="scss" scoped>
+  $boxPadding:15px;
+  .box{
+    width:100%;
+    height:100%;
+    display: flex;
+    justify-content: center;
+    position:relative;
+    .box1{
+      width:49.5%;
+      height:100%;
+      border-radius: 5px;
+      box-shadow:0px 0px 9px 0px rgba(0,0,0,0.1),-2px 0px 9px 0px rgba(0,0,0,0.1),
+      0px 2px 9px 0px rgba(0,0,0,0.1),2px 0px 9px 0px rgba(0,0,0,0.1);
+      background: #fff;
+    }
+    .box1:first-child{
+      margin-right:1%;
+    }
+  }
+  .box1 .head{
+    height:6.8%;
+    background: #d9d9d9;
+    color:#1F233E;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    padding:0 $boxPadding;
+    font-family:"Microsoft YaHei";
+  }
+  $box1paddingTop:10px;
+  .box1 .content{
+    height:93.2%;
+    padding:$box1paddingTop $boxPadding 15px;
+    box-sizing: border-box;
+    position:relative;
+  }
+  .showZsk{
+    position:absolute;
+    z-index:4;
+    right:8px;
+    bottom:8px;
+    width:50px;
+    cursor:pointer;
+  }
+  .zzKu{
+    transition:all .5s;
+    position:absolute;
+    width:100%;
+    height:60%;
+    bottom:0;
+    left:0;
+    box-shadow:0px 0px 9px 0px rgba(0,0,0,0.1),-2px 0px 9px 0px rgba(0,0,0,0.1),
+    0px 2px 9px 0px rgba(0,0,0,0.1),2px 0px 9px 0px rgba(0,0,0,0.1);
+    background:#fff;
+  }
+</style>

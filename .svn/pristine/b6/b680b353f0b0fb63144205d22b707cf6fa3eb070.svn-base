@@ -1,0 +1,270 @@
+<template>
+  <div class="box">
+    <div class="box1 r1">
+      <div class="head">聊天界面</div>
+      <div class="content r1">
+        <iframe style="width:100%;height:100%;border: none;" src="static/agentbar/chatContainer.html" id="weChat01"></iframe>
+        <div v-show="!weChatOn" class="chatOff">聊天功能未开启</div>
+        <!--<div class="tab1">-->
+          <!--<vue-scroll :ops="ops">-->
+            <!--<ul class="ul1A">-->
+              <!--<li>-->
+                <!--豆子-->
+              <!--</li>-->
+            <!--</ul>-->
+          <!--</vue-scroll>-->
+        <!--</div>-->
+        <!--<div class="chatBox">-->
+          <!--<div class="l1"></div>-->
+          <!--<div class="l2">-->
+            <!--<div class="sl">-->
+              <!--<el-button class="fs" type="primary" size="small">受理</el-button>-->
+            <!--</div>-->
+          <!--</div>-->
+          <!--<div class="l3">-->
+            <!--<el-input class="c1" type="textarea"></el-input>-->
+            <!--<div class="c2">-->
+              <!--<el-button class="js" type="danger" size="small">结束对话</el-button>-->
+              <!--<el-button class="fs" type="primary" size="small">发送</el-button>-->
+            <!--</div>-->
+          <!--</div>-->
+        <!--</div>-->
+      </div>
+    </div>
+    <div class="box1 r2">
+      <div class="head">
+        <el-tag class="gd" @click.native="switchTab(item)" :class="tabActive==item?'active':''" v-for="(item,index) in tabs" :key="0">{{item}}</el-tag>
+      </div>
+      <div class="content">
+        <!--<workOrderCom v-if="tabActive=='工单信息'"></workOrderCom>-->
+        <workOrderComWechat v-for="(item,key) in usersInfo" :key="key" :newGd="item.newGd" v-show="chatIdAc==key"></workOrderComWechat>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import workOrderComWechat from "./workOrderComWechat.vue"
+    export default {
+      name:"weChat",
+      data() {
+        return {
+          ops:{
+            bar: {
+              background: "rgba(144,147,153,.3)",
+              onlyShowBarOnScroll: false,
+            },
+          },
+          tabs:["工单信息"],
+          tabActive:"工单信息",
+          newGd:{
+            DZ:"",
+            YHID:"",
+            YHMC:"",
+            JSBM:"",
+            // GDH:"",
+            SJH:"",
+            JHRQ:"",
+            GDNR:"",
+            SLLB:"",
+          },
+          arr1:[],
+        }
+      },
+      computed:{
+        weChatOn(){
+          return this.$store.state.weChatOn;
+        },
+        usersInfo(){
+          return this.$store.state.usersInfo;
+        },
+        chatIdAc(){
+          return this.$store.state.chatIdAc;
+        },
+      },
+      watch:{
+        usersInfo(old,newd){
+          this.$forceUpdate();
+        }
+      },
+      components:{workOrderComWechat},
+      methods:{
+        switchTab(title){
+          this.tabActive = title;
+        }
+      },
+      beforeRouteEnter(to,from,next){
+        next(vm=>{
+        });
+      },
+      activated(){
+      },
+      deactivated(){
+      },
+      mounted(){
+        let that = this;
+        $("#weChat01").on("load", function(event){
+          $(".layui-row",this.contentDocument).on("click",".layui-btn-normal",function(){
+            let chatId = $("#weChat01").contents().find("#chatButtons>.layui-btn-normal").attr("data-node-id");
+            if(chatId && !that.usersInfo.hasOwnProperty(chatId)){
+              that.usersInfo[chatId] = {
+                id:chatId,
+                newGd:{
+                  DZ:"",
+                  YHID:"",
+                  YHMC:"",
+                  JSBM:"",
+                  // GDH:"",
+                  SJH:"",
+                  JHRQ:"",
+                  GDNR:"",
+                  SLLB:""
+                },
+              }
+            }
+            if(that.$store.state.chatIdAc != chatId){
+              that.$store.state.chatIdAc = chatId;
+              that.$forceUpdate();
+            }
+          });
+        });
+      }
+    }
+
+</script>
+
+<style lang="scss" scoped>
+  $boxPadding:15px;
+  $widthR:49.5%;
+  .box{
+    width:100%;
+    height:100%;
+    display: flex;
+    justify-content: center;
+    .box1{
+      width:$widthR;
+      height:100%;
+      border-radius: 5px;
+      box-shadow:0px 0px 9px 0px rgba(0,0,0,0.1),-2px 0px 9px 0px rgba(0,0,0,0.1),
+      0px 2px 9px 0px rgba(0,0,0,0.1),2px 0px 9px 0px rgba(0,0,0,0.1);
+      background: #fff;
+    }
+    .box1:first-child{
+      margin-right:1%;
+    }
+    .box1.r2{
+      width:calc(99% - #{$widthR});
+    }
+  }
+  .box1 .head{
+    height:6.8%;
+    background: #d9d9d9;
+    color:#1F233E;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    padding:0 $boxPadding;
+    font-family:"Microsoft YaHei";
+  }
+  $box1paddingTop:10px;
+  .box1 .content{
+    height:93.2%;
+    padding:$box1paddingTop $boxPadding 15px;
+    box-sizing: border-box;
+    position:relative;
+    background: #f3f3f3;
+  }
+  .box1.r1 .content{
+    display: block;
+    //display:flex;
+    padding:0;
+  }
+  .tab1{
+    width:21.3%;
+    height:100%;
+    margin-right:1.7%;
+  }
+  .ul1A{
+    width:100%;
+    padding:0 15px;
+    box-sizing: border-box;
+  }
+  .ul1A li{
+    width:100%;
+    height:30px;
+    background:rgba(121,154,250,1);
+    border-radius:3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color:#fff;
+  }
+  .chatBox{
+    width:77%;
+    height:100%;
+    border:1px solid rgba(210,210,211,1);
+    background: #fff;
+    $l1:60%;
+    .l1{
+      height:$l1;
+    }
+    $l2:50px;
+    .l2{
+      height:$l2;
+      background: #f3f3f3;
+      position:relative;
+      .sl{
+        position: absolute;
+        right:8px;
+        height:100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+    .l3{
+      height:calc(100% - #{$l1} - #{$l2});
+      .c1{
+        height:67%;
+        /deep/ .el-textarea__inner{
+          height:100%;
+          resize:none;
+        }
+      }
+      .c2{
+        height:33%;
+        background: #f3f3f3;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+    }
+  }
+  .box1.r2{
+    $h1:52px;
+    .head{
+      background: none;
+      height:$h1;
+      .gd{
+        margin-right:8px;
+        cursor: pointer;
+        &.active{
+          background: #799AFA;
+          color:#fff;
+        }
+      }
+    }
+    .content{
+      background: #fff;
+      height:calc(100% - #{$h1})
+    }
+  }
+  .chatOff{
+    position:absolute;
+    z-index:1;
+    top:0;left:0;
+    background: #fff;
+    width:100%;height:100%;
+    font-size:16px;padding:15px;
+  }
+</style>

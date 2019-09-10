@@ -1,0 +1,161 @@
+<template>
+    <div class="c" ref="parent">
+      <vue-scroll :ops="ops" ref="vs" @mousewheel.native="wheel">
+        <ul class="ulist" ref="child">
+          <li :class="tabViewActive==-1?'active':''" @click="goRoute(-1,'/home')">系统首页</li>
+          <li :class="tabViewActive=='微信聊天'?'active':''" @click="goRoute('微信聊天','/weChat')">微信聊天</li>
+          <li :class="tabViewActive=='知识库管理'?'active':''" @click="goRoute('知识库管理','/knowledgeBase')">知识库管理</li>
+          <li v-for="(item,index) in tabList" v-if="item.title!='知识库管理' && item.title!='微信聊天'"  :class="tabViewActive==item.title?'active':''" @click="goRoute(item.title,item.path)">
+            {{item.title}}
+            <div class="img" @click.stop="close(item.title,item.path)">
+              <img src="@/assets/imgs/closeTab.png" v-if="tabViewActive==item.title">
+              <img src="@/assets/imgs/closeTab2.png" v-else>
+            </div>
+          </li>
+        </ul>
+      </vue-scroll>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "tab-views",
+        data(){
+          return{
+            ops:{
+              bar: {
+                background: "rgba(144,147,153,.3)",
+                onlyShowBarOnScroll: false,
+              },
+            },
+            wheelCout:0,
+            maxCount:100,
+          }
+        },
+        computed:{
+          tabList(){
+            return this.$store.state.tabViews;
+          },
+          tabViewActive:{
+            get: function () {
+              return this.$store.state.tabViewActive;
+            },
+            set: function (newVal) {
+
+            }
+          }
+        },
+        methods:{
+          goRoute(title,path){
+            this.$router.push({path:path});
+            this.$store.commit("ctabViewActive",title);
+            window.sessionStorage.setItem('tabViewActive', title);
+            this.$store.commit("cmenu2Active",title);
+            window.sessionStorage.setItem('menu2Active', title);
+          },
+          close(title,path){
+            let curTabs = this.$store.state.tabViews;
+            let a = curTabs.findIndex((value) => {
+              return value.title == title;
+            })
+            curTabs.splice(a,1)
+            this.$store.commit("changeTabViews",curTabs)
+            window.sessionStorage.setItem('tabViews', JSON.stringify(curTabs));
+            //关闭标签为当前激活标签
+            if(this.tabViewActive == title){
+              if(curTabs.length > a){
+                this.tabViewActive = curTabs[a].title;
+                this.$router.push({path:curTabs[a].path});
+                this.$store.commit("ctabViewActive",curTabs[a].title);
+                window.sessionStorage.setItem('tabViewActive', curTabs[a].title);
+                this.$store.commit("cmenu2Active",curTabs[a].title);
+                window.sessionStorage.setItem('menu2Active', curTabs[a].title);
+              }else if(curTabs.length == 0) {
+                //只剩一个标签时
+                this.tabViewActive = -1;
+                this.$router.push({path:"/home"});
+                this.$store.commit("ctabViewActive",-1);
+                window.sessionStorage.setItem('tabViewActive', -1);
+                this.$store.commit("cmenu2Active",-1);
+                window.sessionStorage.setItem('menu2Active', -1);
+              }else{
+                this.tabViewActive = curTabs[a-1].title;
+                this.$router.push({path:curTabs[a-1].path});
+                this.$store.commit("ctabViewActive",curTabs[a-1].title);
+                window.sessionStorage.setItem('tabViewActive', curTabs[a-1].title);
+                this.$store.commit("cmenu2Active",curTabs[a-1].title);
+                window.sessionStorage.setItem('menu2Active', curTabs[a-1].title);
+              }
+            }
+            //更新路由缓存
+            if(path){
+              let keepC = this.$store.state.keepComs;
+              var shan = path.substring(1);
+              if(keepC.indexOf(shan) != -1){
+                keepC.splice( keepC.indexOf(shan), 1 );
+              }
+              this.$store.state.keepComs = keepC;
+            }
+          },
+          wheel(e){
+            this.maxCount = this.$refs.child.offsetWidth - this.$refs.parent.offsetWidth;
+            this.wheelCout = this.wheelCout+e.deltaY;
+            if(this.wheelCout<0){this.wheelCout=0}
+            if(this.wheelCout>this.maxCount){this.wheelCout=this.maxCount+5}
+            this.$refs['vs'].scrollTo({
+              x: this.wheelCout,
+            })
+          }
+        },
+        mounted(){
+          this.maxCount = this.$refs.child.offsetWidth - this.$refs.parent.offsetWidth;
+          this.$store.state.closeTab = this.close;
+        }
+    }
+</script>
+
+<style scoped>
+  .c{
+    height:36px;
+    width:100%;
+    overflow: hidden;
+  }
+  .ulist{
+    height:36px;
+    display: flex;
+    flex-wrap: nowrap;
+  }
+  .ulist li{
+    float: left;
+    width:120px;
+    height:100%;
+    border:1px solid #D9D9D9;
+    box-sizing: border-box;
+    background: #E6E6E6;
+    color:#666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    font-size: 16px;
+  }
+  .ulist li.active{
+    background: #799AFA;
+    color:#fff;
+  }
+  .ulist li .img{
+    top: 0;
+    height:100%;
+    width:15px;
+    position: absolute;
+    right:0;
+    display: flex;
+    visibility: hidden;
+    justify-content: center;
+    align-items: center;
+  }
+  .ulist li:hover .img{
+    visibility: visible;
+  }
+</style>

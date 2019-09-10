@@ -1,0 +1,338 @@
+<template>
+  <div class="role">
+		<div class="wrap">
+			<div class="search">
+				<Input disabled placeholder="ROLE"   style="width: 60px" />
+				<Input v-model="engRole" placeholder="请输入角色的英文名称" style="width: 200px" />
+				<Input v-model="chinaRole" placeholder="请输入角色的中文名称" style="width: 200px" />
+				<Button type="primary" @click="addRole">添加角色</Button>
+			</div>
+      <div class="role_menu">
+				<vue-scroll :ops="ops">
+				<Collapse accordion v-model="value2" @on-change="getPanelKey">
+					<Panel  class="title_con"  v-for="(item,index) in allRoles" :key="item.id" >
+							<span>{{item.roleName}}</span>
+						  <div slot="content" class="con_add">
+								<p class="con_add_title">
+									<span>可访问资源</span>
+								  <a href="javascript:;" class="con_delete" @click="deleteRole(index,item.id)"><Icon type="ios-trash" size="24" /></a>
+								</p>
+								 <Tree :data="data2" show-checkbox @on-check-change="getMenu"></Tree>
+								 <p class="con_btn">
+									 <Button size="small" @click="cancelChange">取消修改</Button>
+								   <Button type="primary" size="small" @click="sureSelect(item.id,item.roleName)">确认修改</Button>
+								 </p>
+							</div>
+					</Panel>
+        </Collapse></vue-scroll>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+export default {
+	name:'Rolemanage',
+	data () {
+		return {
+			value2:'',
+			engRole:'',
+			chinaRole:'',
+			allRoles:[],
+			rid:'',
+			roleOwnMenu:[
+				{
+					children: []	
+				}
+			],
+			data2: [
+					{
+						title: '所有菜单',
+						expand: false,
+						selected:true,
+						children: []
+				}
+			],
+			selectRoles:[],
+			ops:{
+        bar: {
+          background: "rgba(144,147,153,.3)",
+          onlyShowBarOnScroll: false,
+        }
+      },
+		}
+	},	
+	computed:{
+		  newdata2 () {
+				return this.data2
+		  }
+	},
+	methods:{
+		getMenu (data) {
+			this.selectRoles = data;
+			// console.log(this.selectRoles);
+		},
+		sureSelect (rid,name) {
+			let that  = this;
+			let allId = [];
+			that.selectRoles.forEach(function(item,index){
+				allId.push(item.id)
+      })
+      console.log(rid)
+      let menuid = allId.join(',')
+			// console.log(allId)
+			this.$Modal.confirm({
+				title:"角色菜单权限",
+				content:`你确定要修改:${name}的菜单列表?`,
+				okText:'确定',
+				cancel:'取消',
+				onOk:()=>{
+					that.axios({
+           url:"menu/updateMenuRole" ,
+           method:'post',
+           params:{
+             rid:rid,
+						 mids:menuid
+           }
+          }).then(res=>{
+							// console.log(res.data)
+							let status = res.data.status;
+							if(status === 'success'){
+								this.$Message.info('角色菜单已修改')
+							}
+					}).catch(error=>{
+						console.log(error)
+					})
+				},
+				onCancel:()=>{
+					this.$Message.info('已取消修改')
+				}
+			})
+		},
+		addRole () {
+      let that= this;
+      let addc = that.chinaRole;
+			let adde = that.engRole;
+      this.axios({
+        url:'/role/addRole',
+        method:'post',
+        params:{
+          name:adde,
+          nameZh:addc
+        }
+        },{
+        name:adde,
+        nameZh:addc
+      }).then(res=>{
+				// console.log(res.data);
+				let status = res.data.status;
+				let data = res.data.date;
+				// console.log(data)
+				if(status === 'success'){
+          that.allRoles.push({roleName:data.nameZh,id:data.id})
+          console.log(that.allRoles)
+				}else{
+					this.$$Message.info("添加角色失败")
+				}
+      })
+		},
+		// 删除角色
+		deleteRole (index,id) {
+			let that = this
+      let roleId = id;
+      console.log(roleId)
+			this.axios({
+       method:'post',
+       url:"/role/deleteRole",
+       params:{
+        id:roleId 
+       } 
+      }).then(res=>{
+        let status = res.data.status;
+			  if(status === 'success'){
+					this.$Modal.confirm({
+						title:'删除当前角色',
+						content:`确定要删除角色名:${this.allRoles[index].roleName}?`,
+						okText:'确定',
+						cancelText:'取消',
+						onOk:()=>{
+							that.allRoles.splice(index,1)
+						}
+					})
+				}else{
+					this.$Message.info("删除角色失败");
+				}
+			})
+			
+		},
+		cancelChange () {
+			this.value2 = 'null'
+		},
+		// 初始化角色列表
+		initRoleMenu () {
+      let that = this
+			this.axios({
+        method:"get",
+        url:'/role/allRoles',
+      }).then(res=>{
+				let data = res.data;
+				// console.log(data)
+        data.forEach(function(item){
+          that.allRoles.push({roleName:item.nameZh,id:item.id})
+        })
+			})
+			// console.log(that.allRoles)
+    },
+    //初始化菜单
+    initMenu () {
+      let that = this;
+       this.axios({
+         method:"get",
+         url:"/menu/allMenus"
+       }).then((res)=>{
+				 let menu = res.data;
+          // for(let i=0;i<menu.length;i++){
+          //   that.data2[0].children.push({title:menu[i].name,children:[],expand:false,id:menu[i].id})
+          //   for(let j=0;j<menu[i].children.length;j++){
+          //   that.data2[0].children[i].children.push({title:menu[i].children[j].name,id:menu[i].children[j].id})	
+          //   }
+          // };
+				//  this.axios({
+				// 	 method:"post",
+				// 	 url:"role/getAllMenuRole"
+				//  }).then(res=>{
+					 let ownMenu = res.data;
+					//  console.log(ownMenu)
+							for(let i=0;i<menu.length;i++){
+								that.data2[0].children.push({title:menu[i].name,children:[],expand:false,id:menu[i].id})
+								for(let j=0;j<menu[i].children.length;j++){
+								// if(ownMenu.find(el=>el.id === menu[i].children[j].id)){
+									that.data2[0].children[i].children.push({title:menu[i].children[j].name,id:menu[i].children[j].id})	
+								// }else{
+									// that.data2[0].children[i].children.push({title:menu[i].children[j].name,id:menu[i].children[j].id})	
+								//  }
+								}
+							};
+				//  })
+         console.log(that.data3)
+       })
+		},
+    getPanelKey (index) {
+			let that = this;
+			// that.initMenu();
+			if(index.length){
+				that.data2 = [{
+						title: '所有菜单',
+						expand: false,
+						selected:true,
+						children: []
+						}
+				 ];
+			  that.initMenu();
+				let id = that.allRoles[index].id;
+				console.log(id)
+				this.axios({
+					method:'post',
+					url:"/role/getMenuRoleByRid",
+					params:{
+						id:id
+					}
+				}).then(res=>{
+					console.log(res.data)
+					let rdata = res.data.menus; //角色拥有菜单
+					// console.log( that.data3);
+					// let alldata = that.data3; //所有菜单
+					// console.log(rdata);
+					// console.log(alldata);
+					if(rdata){
+						// console.log(alldata[0].children.length)
+						for(let i=0;i<that.data2[0].children.length;i++){
+						// console.log(data[0].children)
+						for(let j=0;j<that.data2[0].children[i].children.length;j++){
+							// console.log(data[0].children[i].children)
+							rdata.forEach(item=>{
+								if(that.data2[0].children[i].children[j].id == item.id){
+									console.log(item.id)
+									// data[0].children[i].children[j].checked = true
+									this.$set(that.data2[0].children[i].children[j],'checked',true)
+								}
+							})
+						}
+					 }
+					}
+				})
+			}else{
+				console.log(index)
+			}
+		},
+	},
+	mounted () {
+		let that = this;
+		that.initRoleMenu()
+		// that.initRoleOwnMenu();
+		// that.initMenu();
+		// that.loadOwnMenu()
+	},
+
+}
+</script>
+
+<style scoped>
+.role{
+	width: 100%;
+	height: calc(100% - 61px);
+	padding: 23px;
+	position: absolute;
+  top:61px;
+  left: 0px;
+}
+.con_emp{
+  font-size:20px;
+  color:#fff;
+  text-align: left;
+  font-weight: normal
+}
+.wrap{
+	width: 80%;
+	height: 100%;
+	/* height: 460px; */
+	/* background: #0f0 */
+}
+.search{
+	text-align:left;
+	padding:10px 0 0 40px;
+}
+.role_menu{
+	width:63%;
+	height: calc(100% - 42px);
+	padding: 10px 0 0 40px
+}
+.title_con{
+	text-align: left;
+}
+.con_add{
+	width: 100%;
+	/* height: 100px; */
+	border:1px solid #ccc;
+	padding: 10px;
+	/* background: #0f0 */
+}
+.con_add_title{
+	height: 30px;
+	line-height:  30px;
+	font-size: 15px ;
+	border-bottom: 1px solid #ccc
+}
+.con_delete{
+	display:block;
+	float:right;
+	/* margin-right: 20px; */
+	/* width: 20px;
+	height: 20px; */
+	/* background: #0f0 */
+}
+.con_btn{
+	text-align: right;
+}
+</style>
+

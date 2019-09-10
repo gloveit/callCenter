@@ -1,0 +1,214 @@
+<template>
+  <div class="content">
+    <div id="meter" class="common">
+      <div class="filter" >
+        <span class="label">
+          客户电话
+        </span>
+          <el-input v-model="callerNum" placeholder="请输入" style="width: 15%;margin-right: 30px;"></el-input>
+          <span class="label">留言时间</span>
+          <el-date-picker v-model="beginDate" type="datetime" placeholder="选择日期时间"  format="yyyy-MM-dd  HH:mm:ss"  value-format="yyyy-MM-dd HH:mm:ss" default-time="12:00:00"></el-date-picker>
+          <span class="label">至</span>
+          <el-date-picker v-model="endDate" type="datetime" placeholder="选择日期时间"  format="yyyy-MM-dd  HH:mm:ss"  value-format="yyyy-MM-dd HH:mm:ss" default-time="12:00:00"></el-date-picker>
+          <span class="label" style="margin-left: 30px;">留言状态</span>
+          <el-select v-model="value" placeholder="请选择">
+            <el-option v-for="item in options" :key="item.value"
+              :label="item.label" :value="item.value">
+            </el-option>
+          </el-select>
+          <el-button type="primary" plain style="margin-left: 30px;" @click="find">查询</el-button>
+      </div>
+      <div style="height: 80%;">
+        <template>
+          <el-table highlight-current-row border id="messageRecord" :data="tableData" style="width: 100%;" :height="tableHeight">
+            <el-table-column type="index" :index="typeIndex"></el-table-column>
+            <el-table-column label="号码或标识">
+              <template slot-scope="scope">
+                <span>{{ scope.row.xuser_nick_name}}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="留言时间" >
+              <template slot-scope="scope">
+                <i class="el-icon-time"></i>
+                <span style="margin-left: 10px">{{ scope.row.create_time}}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="留言时长（秒）">
+              <template slot-scope="scope">
+                <span>{{ scope.row.duration }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="留言内容" >
+              <template slot-scope="scope">
+                <p v-if="scope.row.domain == 'PSTN'">
+                  <el-button size="mini" @click="Playback(scope.$index, scope.row)">录音</el-button>
+                </p>
+                <p v-if="scope.row.domain == 'webchat'">
+                  <el-button size="mini" @click="Playback(scope.$index, scope.row)">消息</el-button>
+                </p>
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" :formatter="typeFormatter">
+            </el-table-column>
+            <el-table-column label="留言处理" >
+              <template slot-scope="scope">
+                <p v-if="scope.row.status == 2">
+                  <el-button size='mini' type='primary' @click='handleEdit'>处理</el-button>
+                  <el-button size='mini' type='danger' @click='handleDelete'>放弃</el-button>
+                </p >
+                <p v-if="scope.row.status == null">
+                  <el-button size='mini' type='primary' @click='handleEdit'>处理</el-button>
+                  <el-button size='mini' type='danger' @click='handleDelete'>放弃</el-button>
+                </p >
+                <p v-if="scope.row.status == 1">
+                  <el-button id='side' size='mini' type='primary'disabled @click=''>处理</el-button>
+                  <el-button size='mini' type='danger' @click='handleDelete'>放弃</el-button>
+                </p >
+              </template>
+            </el-table-column>
+            <!--<el-table-column label="留言处理">-->
+              <!--<template slot-scope="scope">-->
+                <!--<el-button id="side" size="mini" type="primary"  @click="handleEdit(scope.$index, scope.row)">处理</el-button>-->
+                <!--<el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">放弃</el-button>-->
+              <!--</template>-->
+            <!--</el-table-column>-->
+          </el-table>
+        </template>
+      </div>
+      <div class="page">
+        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
+        :page-size="pageSize" layout="total, prev, pager, next, jumper" :total="dataCount">
+        </el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  export default {
+    name:"messageRecord",
+    data() {
+      return {
+        tableHeight:'100%',
+        action:"",
+        callerNum:'',
+        beginDate:'',
+        endDate:'',
+        status:'',
+        service: '',
+        //当前页
+        currentPage: 1,
+        //初始化总条数
+        dataCount:0,
+        //每页显示多少条
+        pageSize:15,
+        tableData: [],
+        value: '',
+        options: [{
+          value: "",
+          label: '全部状态'
+        }, {
+          value: 0,
+          label: '未处理'
+        }, {
+          value: 1,
+          label: '已处理'
+        }, {
+          value: 2,
+          label: '已废弃'
+        }]
+      }
+    },
+    methods:{
+      handleSizeChange(size) {
+        this.pageSize = size;
+      },
+      handleCurrentChange: function(currentPage){
+        this.currentPage = currentPage;
+        this.messages(currentPage);
+      },
+      messages:function(){
+        let that=this;
+        that.axios.get('/msg/getMsgList?page='+that.currentPage+'&callerNum='+that.callerNum+'&beginDate='+that.beginDate+'&endDate='+that.endDate+'&status='+that.value).then(function (response) {
+          console.log(response.data.date);
+          that.tableData=response.data.date.list;
+          that.dataCount=response.data.date.total;
+          }).catch(function (error) {
+            console.log(error);
+          });
+      },
+      find:function(){
+        let callerNum=this.callerNum;
+        if(this.beginDate == null ){
+          this.beginDate = "";
+        }
+        if(this.endDate == null ){
+          this.endDate = "";
+        }
+        let value =this.value;
+        this.messages();
+      },
+      typeIndex(index){
+          return index + (this.currentPage - 1) * 15 + 1;
+      },
+      typeFormatter: function(row, column) {
+        return row.status === 1 ? '已处理' : row.status === 2 ? '已废弃' : '未处理';
+      },
+      handleEdit(index,row) {
+
+      },
+      handleDelete(index, row) {
+        console.log(index, row);
+      },
+      Playback(index,row){
+        console.log(index);
+        if(row.domain == "PSTN"){
+          if(row.call_id == ""||row.call_id == null||row.file_name ==""||row.file_name ==null){
+            alert("没有留言");
+          }else{
+            this.action="http://118.31.169.180/ucm/api/leavemsg/play_leave_msg?call_id="+row.call_id+'&file_name='+row.file_name;
+            window.open(this.action,'留言回放','height=250,width=400,top=250%,left=250%');
+          }
+        }else{
+          if(row.call_id == ""||row.call_id == null){
+            alert("没有留言");
+          }else{
+            this.action="http://118.31.169.180/webchatSessionDetail.action?params.session_id="+row.call_id;
+            window.open(this.action,'留言回放','height=300,width=600,top=200%,left=150%');
+          }
+        }
+      }
+    },
+    mounted(){
+      this.messages();
+    }
+  }
+</script>
+
+<style scoped>
+  .content{
+    width: 100%;
+    height:100%;
+    overflow:hidden;
+    background: #ffffff;
+    position: relative;
+    padding-top: 10px;
+    z-index: 1;
+  }
+  .common{
+    width: 100%;
+    height:100%;
+    margin: 0px auto;
+  }
+  .filter{
+    margin-bottom: 10px;
+    height: 40px;
+  }
+  .page{
+    float: right;
+    margin-top: 10px;
+  }
+  .label{
+    color:#909399;
+  }
+</style>

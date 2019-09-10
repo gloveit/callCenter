@@ -1,0 +1,106 @@
+import Vue from 'vue'
+import Vuex from 'vuex'
+Vue.use(Vuex)
+function isJson(str) {
+  if (typeof str == 'string') {
+    try {
+      var obj=JSON.parse(str);
+      if(typeof obj == 'object' && obj ){
+        return true;
+      }else{
+        return false;
+      }
+    } catch(e) {
+      console.log('error：'+str+'!!!'+e);
+      return false;
+    }
+  }else{
+    return false;
+  }
+}
+const state = {
+  //标签列表
+  tabViews:window.getSession('tabViews') && isJson(window.getSession('tabViews'))?JSON.parse(window.getSession('tabViews')):[{title:"知识库管理",path:"/knowledgeBase"},{title:"微信聊天",path:"/weChat"}],
+  //左侧二级菜单激活标题
+  menu2Active:window.getSession('menu2Active')?window.getSession('menu2Active'):-1,
+  //tabView激活标题
+  tabViewActive:window.getSession('tabViewActive')?window.getSession('tabViewActive'):-1,
+  homeAuth:false,
+  //左侧菜单列表
+  menuList:window.getSession('menuList') && isJson(window.getSession('menuList'))?JSON.parse(window.getSession('menuList')):[],
+  //路由权限列表
+  authList: window.getSession('authList') && isJson(window.getSession('authList'))?JSON.parse(window.getSession('authList')): {
+    index: true,
+    login: true,
+    home: true,
+    callRecords: false,
+  },
+  keepComs:["workOrder","workOrder1","weChat","knowledgeBase",],
+  //呼叫
+  callShow:false,
+  phone:{
+    title:"正在呼出",num:""
+  },
+  //电话工单是否可关闭
+  callOrder:false,
+  goRoute:()=>{},
+  //关闭标签的方法
+  closeTab:()=>{},
+  //客户信息请求参数
+  userInter:{
+    TJ:"",
+    YHLY:1,
+    TJLX:4,
+  },
+  //部门列表
+  departList:window.sessionStorage.getItem('departList') && isJson(window.sessionStorage.getItem('departList'))?JSON.parse(window.sessionStorage.getItem('departList')):[],
+  //部门id
+  departmentId:'',
+  // 知识库文章id
+  articleId:"",
+  // 知识库文章类型id
+  articleStatus:{
+    kindid:"",
+    istop:""
+  },
+  //知识库显示页面
+  knowledgePage:0,
+}
+const mutations = {
+  changeTabViews(state,n){
+    state.tabViews = n;
+  },
+  cmenu2Active(state,n){
+    state.menu2Active = n;
+  },
+  ctabViewActive(state,n){
+    state.tabViewActive = n;
+  },
+  ccallShow(state,n){
+    state.callShow = n;
+  },
+  chomeAuth(state,n){
+    state.homeAuth = n;
+  },
+  getDepartList (state,n){
+    state.departList = n;
+    window.sessionStorage.setItem('departList',JSON.stringify(n));
+  },
+  getDepartmentId (state,n) {
+    state.departmentId = n
+  },
+  getArticleId (state,n){
+    state.articleId = n
+  },
+  getArticleStatus (state,n){
+    state.articleStatus.kindid = n.kindid;
+    state.articleStatus.istop = n.istop;
+  },
+}
+
+const store = new Vuex.Store({
+  state,
+  mutations,
+});
+
+export default store

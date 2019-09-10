@@ -1,0 +1,167 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+
+Vue.use(Router);
+
+export default new Router({
+  routes: [
+    {
+      path: '/',
+      name: 'index',
+      component: () => import("@/components/index.vue"),
+      redirect:"/login",
+      children:[
+        {
+          path:"home",
+          name:"home",
+          component:() => import("@/components/home.vue"),
+          meta:{keepAlive:false}
+        },
+        {
+          path:"callRecords",
+          name:"callRecords",
+          component:() => import("@/components/callRecords.vue")
+        },
+        {
+          path:"/workOrder",
+          name:"workOrder",
+          component:() => import("@/components/workOrder.vue"),
+          redirect:"/workOrder/knowledgeBase",
+          children:[
+            {
+              path:"knowledgeBase",
+              name:"workOrder",
+              meta:{one:"/workOrder"},
+              component:() => import("@/components/knowledgeBase.vue")
+            },
+            {
+              path:"articleDetail",
+              name:"workOrder",
+              component:() => import("@/components/articleDetail.vue")
+            },
+            {
+              path:"changeArticle",
+              name:"workOrder",
+              component:() => import("@/components/changeArticle.vue")
+            },
+            {
+              path:"addArticle",
+              name:"workOrder",
+              component:() => import("@/components/addArticle.vue")
+            },
+          ]
+        },
+        {
+          path:"/workOrder1",
+          name:"workOrder1",
+          component:() => import("@/components/workOrder1.vue"),
+          redirect:"/workOrder1/knowledgeBase",
+          children:[
+            {
+              path:"knowledgeBase",
+              name:"knowledgeBase",
+              meta:{one:"/workOrder1"},
+              component:() => import("@/components/knowledgeBase.vue")
+            },
+            {
+              path:"articleDetail",
+              name:"articleDetail",
+              component:() => import("@/components/articleDetail.vue")
+            },
+            {
+              path:"changeArticle",
+              name:"changeArticle",
+              component:() => import("@/components/changeArticle.vue")
+            },
+            {
+              path:"addArticle",
+              name:"addArticle",
+              component:() => import("@/components/addArticle.vue")
+            },
+          ]
+        },
+        {
+          path:"/workOrderList",
+          name:"workOrderList",
+          component:() => import("@/components/workOrderList.vue")
+        },
+        {
+          path:"usermanage",
+          name:"userManage",
+          component:() => import("@/components/userManage.vue")
+        },
+        {
+          path:"menumanage",
+          name:"menuManage",
+          component:() => import("@/components/menuManage.vue")
+        },
+        {
+          path:"rolemanage",
+          name:"roleManage",
+          component:() => import("@/components/roleManage.vue")
+        },
+        {
+          path:"/messageRecord",
+          name:"messageRecord",
+          component:() => import("@/components/messageRecord.vue")
+        },
+        {
+          path:"/agentMonitoring",
+          name:"agentMonitoring",
+          component:() => import("@/components/agentMonitoring.vue"),
+        },
+        {
+          path:"/weChat",
+          name:"weChat",
+          component:() => import("@/components/weChat.vue"),
+        },
+        {
+          path:"/knowledgeBase",
+          name:"knowledgeBase",
+          component:() => import("@/components/knowledgeBase.vue"),
+          meta:{one:""},
+        },
+        {
+          path:"/articleDetail",
+          name:"articleDetail",
+          component:() => import("@/components/articleDetail.vue")
+        },
+        {
+          path:"/addArticle",
+          name:"addArticle",
+          component:() => import("@/components/addArticle.vue")
+        },
+        {
+          path:"/changeArticle",
+          name:"changeArticle",
+          component:() => import("@/components/changeArticle.vue")
+        },
+        {
+          path:"/satisfyReport",
+          name:"satisfyReport",
+          component:() => import("@/components/satisfyReport.vue")
+        },
+        {
+          path:"/serviceRes",
+          name:"serviceRes",
+          component:() => import("@/components/serviceRes.vue")
+        },
+        {
+          path:"/lineUp",
+          name:"lineUp",
+          component:() => import("@/components/lineUp.vue")
+        },
+        {
+          path:"/seatWork",
+          name:"seatWork",
+          component:() => import("@/components/seatWork.vue")
+        },
+      ]
+    },
+    {
+      path:"/login",
+      name:"login",
+      component:() => import("@/components/login.vue")
+    },
+  ]
+})

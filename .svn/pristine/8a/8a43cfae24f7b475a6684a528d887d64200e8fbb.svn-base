@@ -1,0 +1,197 @@
+<template>
+  <div style="width:100%;height:100%">
+    <vue-scroll :ops="ops">
+      <div class="gdForm r2" style="width:100%;">
+        <span>受理类别:</span>
+        <el-radio-group v-model="sldl" size="small">
+          <el-radio-button @click.native="getListX(i.id)" :label="i.name" v-for="i in sldlList"></el-radio-button>
+        </el-radio-group>
+      </div>
+      <div class="slxl">
+        <el-radio v-model="slxl"
+                  :label="i.id" class="sradio"
+                  v-for="(i,index) in slxlList" :key="i.id">{{i.name}}</el-radio>
+      </div>
+      <div class="gdForm r2">
+        <span>用户ID</span>
+        <el-input v-model="newGd.YHID" class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2 mo">
+        <span>用户名称</span>
+        <el-input v-model="newGd.YHMC" class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r1">
+        <span>地址</span>
+        <el-input v-model="newGd.DZ" class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2">
+        <span>手机号</span>
+        <el-input v-model="newGd.SJH" class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2 mo">
+        <span>完成日期</span>
+        <el-date-picker
+          size="small" type="date"
+          v-model="newGd.JHRQ"
+          value-format="yyyyMMdd"
+          placeholder="选择日期">
+        </el-date-picker>
+      </div>
+      <div class="gdForm r2">
+        <span>接受部门</span>
+        <el-select v-model="newGd.JSBM" placeholder="请选择" size="small" class="inp">
+          <el-option value="建设路站"></el-option>
+          <el-option value="大营盘站"></el-option>
+          <el-option value="新建路站"></el-option>
+          <el-option value="迎新街站"></el-option>
+          <el-option value="河西站"></el-option>
+          <el-option value="迎新街站"></el-option>
+          <el-option value="和平北站"></el-option>
+          <el-option value="工营事团"></el-option>
+          <el-option value="管事所"></el-option>
+        </el-select>
+      </div>
+      <!--<div class="gdForm r2 mo">-->
+        <!--<span>客服系统工单号</span>-->
+        <!--<el-input v-model="newGd.GDH" class="inp" size="small"></el-input>-->
+      <!--</div>-->
+      <div class="gdForm">
+        <span>问题描述</span>
+        <el-input v-model="newGd.GDNR" class="inp" type="textarea" :autosize="{ minRows: 3, maxRows: 6}"></el-input>
+      </div>
+      <div class="gdForm save">
+        <el-button type="primary" size="small" @click="save">保存</el-button>
+      </div>
+    </vue-scroll>
+  </div>
+</template>
+
+<script>
+    export default {
+      name:"",
+      data() {
+        return {
+          ops:{
+            bar: {
+              background: "rgba(144,147,153,.3)",
+              // onlyShowBarOnScroll: false,
+            },
+          },
+          newGd:this.$parent.newGd,
+          //受理类型大类
+          sldl:1,
+          //受理类型大类列表
+          sldlList:[],
+          //受理小类
+          slxl:"",
+          //受理类型小类列表
+          slxlList:"",
+        }
+      },
+      computed:{
+      },
+      methods:{
+        save(){
+          this.axios({
+            method:"post",
+            url:"/dcgd/postCSTaskInfo",
+            params:this.newGd
+          }).then((res) => {
+            if(res.status == 200){
+              if(res.data.FHM == "M000"){
+                this.$message.success("工单信息提交成功!");
+                this.$store.state.callOrder = true;
+              }else{
+                this.$message.info(res.data.FHXX);
+              }
+            }
+          })
+        },
+        getListD(){
+          this.sldlList = [];
+          this.axios({
+            method:"get",
+            url:"/dcgd/firstWorkorderCategory",
+          }).then((res) => {
+            if(res.status==200){
+              this.sldlList = res.data;
+              if(!this.slxlList.length){
+                this.getListX(res.data[0].id);
+                this.sldl = res.data[0].name;
+              }
+            }
+          })
+        },
+        getListX(pid){
+          this.slxlList = [];
+          this.axios({
+            method:"get",
+            url:"/dcgd/secondWorkorderCategory",
+            params:{
+              pid:pid
+            }
+          }).then((res) => {
+            if(res.status==200){
+              this.slxlList = res.data;
+            }
+          })
+        },
+      },
+      mounted(){
+        this.getListD();
+      },
+    }
+
+</script>
+
+<style lang="scss" scoped>
+  .gdForm{
+    width:100%;
+    display: flex;
+    align-items: center;
+    color:#1F233E;
+    font-size: 14px;
+    margin-top:10px;
+    margin-bottom:14px;
+    float: left;
+    &.r2{
+      width:46%;
+      margin-right:8%;
+    }
+    &.r2.mo{
+      margin-right:0;
+    }
+    $s:80px;
+    span{
+      width:$s;
+    }
+    .inp{
+      width:calc(100% - #{$s});
+    }
+    /deep/ .inp input.el-input__inner{
+      background:rgba(243,243,243,1);
+    }
+    /deep/ .el-textarea__inner{
+      background-color:rgba(243,243,243,1);
+    }
+    &.save{
+      justify-content: flex-end;
+    }
+  }
+  .slxl{
+    width:100%;clear: both;
+    .sradio{
+      width:33%;
+      box-sizing: border-box;
+      margin:{
+        /*right:8px;*/
+        /*bottom:8px;*/
+      }
+    }
+    /deep/ .el-radio+.el-radio{
+      margin:{
+        left:0px;
+      }
+    }
+  }
+</style>

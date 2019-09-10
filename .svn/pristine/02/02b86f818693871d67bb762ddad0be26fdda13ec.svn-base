@@ -1,0 +1,613 @@
+<template>
+    <div class="box">
+      <div class="hang1">
+        <div class="tm1">
+          <div class="head">
+            <div class="title">
+              <img src="@/assets/imgs/gonggao.png" alt="">
+              <div class="zi">公告</div>
+            </div>
+            <div class="more" @click="moreNotice(1)">查看更多 ></div>
+          </div>
+          <div class="contain">
+            <ul>
+              <li v-for="item in noticeList" @click="goR(1,item.id)">
+                <img src="@/assets/imgs/notice01.png" alt="">
+                <span class="zi">{{item.title}}</span>
+                <div class="time">{{item.create_time?item.create_time.substring(0,10):""}}</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="fenge1"></div>
+        <div class="tm2">
+          <div class="head">
+            <div class="title">
+              <img src="@/assets/imgs/zhishiku.png" alt="">
+              <div class="zi">知识库</div>
+            </div>
+            <div class="more" @click="moreArticle(2)">查看更多 ></div>
+          </div>
+          <div class="contain">
+            <ul>
+              <li v-for="i in articleList" @click="goR(2,i.id)">
+                <div class="img">
+                  <img src="@/assets/imgs/demo01.png" alt="图片">
+                </div>
+                <div class="c">
+                  <div class="title">{{i.title}}
+                    <!--<img src="@/assets/imgs/more.png" />-->
+                  </div>
+                  <div class="sub">{{(i.body.replace(/<\/?.+?>/g,"")).replace(/ /g,"")}}</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          </div>
+      </div>
+      <div class="fenge2"></div>
+      <div class="tm3">
+        <div class="zhibiao">
+          <div id="zhibiao"></div>
+          <div class="t">
+            <div v-for="item in zbTime" @click="changeZbTime(item.title)" :class="zbTActive==item.title?'active':''">{{item.title}}</div>
+          </div>
+        </div>
+        <div id="yonghu"></div>
+      </div>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "home",
+        data(){
+          return{
+            //公告
+            noticeList:[
+              {title:"关于杭州市江干区下沙金沙湖街道停电停水的公告",time:"2018-09-20"},
+              {title:"关于杭州市江干区下沙金沙湖街道停电停水的公告",time:"2018-09-20"},
+              {title:"关于杭州市江干区下沙金沙湖街道停电停水的公告",time:"2018-09-20"},
+              {title:"关于杭州市江干区下沙金沙湖街道停电停水的公告",time:"2018-09-20"},
+              {title:"关于杭州市江干区下沙金沙湖街道停电停水的公告",time:"2018-09-20"},
+              {title:"关于杭州市江干区下沙金沙湖街道停电停水的公告",time:"2018-09-20"},
+            ],
+            //知识库
+            articleList:[],
+            zhibiaoEchart:null,
+            yonghuEchart:null,
+            zbTime:[{title:"日"},{title:"周"},{title:"月"}],
+            zbTActive:"周",
+          }
+        },
+        methods:{
+          zhibiao(obj){
+            let option = {
+              title: {
+                text: "指标趋势图",
+                textStyle:{
+                  color:'#1F233E',
+                  fontStyle:'',
+                  fontSize:16,
+                  fontWeight:100
+                }
+              },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'shadow',
+                },
+              },
+              legend:{
+                right:"40%",
+                textStyle:{
+                  color:"#1F233E",
+                  fontSize:10,
+                },
+                itemWidth:10,//图形标记的宽
+                itemGap:5,
+                data:["预期效果","实际效果"]
+              },
+              grid: {
+                top:"15%",
+                bottom:"5%",
+                left:'3%',
+                right:'3%',
+                containLabel: true
+              },
+              xAxis: {
+                type: 'category',
+                axisTick: {
+                  show: false
+                },
+                splitLine:{
+                  show:false,
+                  color: '#000'
+                },
+                axisLine: {
+                  show:true,
+                  lineStyle: {
+                    type: 'solid',
+                    color:"#EBEBEB"
+                  }
+                },
+                axisLabel: {
+                  interval:0,
+                  textStyle: {
+                    color: '#999',
+                  }
+                },
+                data: obj.xData
+              },
+              yAxis: {
+                type: 'value',
+                axisTick: {
+                  show: false
+                },
+                splitLine: {
+                  show: true,
+                  lineStyle:{
+                    color: "#EBEBEB",
+                    width:1
+                  }
+                },
+                axisLine: {
+                  show:false,
+                  lineStyle: {
+                    type: 'solid',
+                    color: '#999',
+                    width:1
+                  }
+                },
+                axisLabel: {
+                  textStyle: {
+                    color: '#999',//坐标值得具体的颜色
+                  }
+                }
+              },
+              series: [
+                {
+                  name:"预期效果",
+                  barWidth : 10,
+                  data: obj.data1,
+                  type: 'bar',
+                  itemStyle:{
+                    normal:{
+                      color:"#FF58A2",
+                      barBorderRadius:[5, 5, 5, 5]
+                    }
+                  }
+                },
+                {
+                  name:"实际效果",
+                  barWidth : 10,
+                  data: obj.data2,
+                  type: 'bar',
+                  itemStyle:{
+                    normal:{
+                      color:"#2399F1",
+                      barBorderRadius:[5, 5, 5, 5]
+                    }
+                  }
+                }
+              ]
+            }
+            this.zhibiaoEchart.setOption(option);
+          },
+          changeZbTime(title){
+            this.zbTActive = title;
+            let data = {};
+            switch(title){
+              case "日":
+                data = {
+                  xData:["10.1","10.2","10.3","10.4","10.5","10.6","10.7"],
+                  data1:[200,300,400,500,600,750,800],
+                  data2:[250,300,450,560,650,770,810]
+                }
+                break;
+              case "周":
+                data = {
+                  xData:["第一周","第二周","第三周","第四周","第五周","第六周","第七周"],
+                  data1:[500,600,700,800,800,850,900],
+                  data2:[450,600,750,860,850,870,910]
+                }
+                break;
+              default:
+                data = {
+                  xData:["3月","4月","5月","6月","7月","8月","9月"],
+                  data1:[600,700,800,900,1000,1150,1200],
+                  data2:[650,700,850,960,1050,1170,1210]
+                }
+                break;
+            }
+            this.zhibiao(data);
+          },
+          yonghu(obj){
+            let option = {
+              title: {
+                text: "用户访问量",
+                textStyle:{
+                  color:'#1F233E',
+                  fontStyle:'',
+                  fontSize:16,
+                  fontWeight:100
+                }
+              },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'shadow',
+                },
+              },
+              legend:{
+                right:"40%",
+                textStyle:{
+                  color:"#1F233E",
+                  fontSize:10,
+                },
+                itemWidth:10,//图形标记的宽
+                itemGap:5,
+                data:["访问人数"]
+              },
+              grid: {
+                top:"15%",
+                bottom:"5%",
+                left:'3%',
+                right:'3%',
+                containLabel: true
+              },
+              xAxis: {
+                type: 'category',
+                axisTick: {
+                  show: false
+                },
+                splitLine:{
+                  show:false,
+                  color: '#000'
+                },
+                axisLine: {
+                  show:true,
+                  lineStyle: {
+                    type: 'solid',
+                    color:"#EBEBEB"
+                  }
+                },
+                axisLabel: {
+                  interval:0,
+                  textStyle: {
+                    color: '#999',
+                  }
+                },
+                data: obj.xData
+              },
+              yAxis: {
+                type: 'value',
+                axisTick: {
+                  show: false
+                },
+                splitLine: {
+                  show: true,
+                  lineStyle:{
+                    color: "#EBEBEB",
+                    width:1
+                  }
+                },
+                axisLine: {
+                  show:false,
+                  lineStyle: {
+                    type: 'solid',
+                    color: '#999',
+                    width:1
+                  }
+                },
+                axisLabel: {
+                  textStyle: {
+                    color: '#999',//坐标值得具体的颜色
+                  }
+                }
+              },
+              series: [{
+                name:"访问人数",
+                smooth:true,
+                data: obj.seriesData,
+                type: 'line',
+                lineStyle:{
+                  normal:{
+                    color:"#799afa"
+                  }
+                },
+                areaStyle: {
+                  normal:{
+                    color:"#cedafb"
+                  }
+                }
+              }]
+            }
+            this.yonghuEchart.setOption(option);
+          },
+          //获取所有公告
+          getNotice(){
+            this.noticeList = [];
+            this.axios({
+              method:"post",
+              url:"knowledge/findKnowledgeByTid",
+              params:{id:2}
+            }).then((res) => {
+              if(res.status == 200){
+                if(res.data instanceof Array){
+                  this.noticeList = res.data.slice(0,6);
+                }
+              }
+            })
+          },
+          moreNotice(t){
+            this.$store.state.goRoute("/knowledgeBase","知识库管理",{gg:t});
+          },
+          goR(t1,t2){
+            this.$store.state.goRoute("/knowledgeBase","知识库管理",{gg:t1,id:t2});
+          },
+          //获取所有文章
+          getArticle(){
+            this.articleList = [];
+            this.axios({
+              method:"get",
+              url:"/knowledge/allKnowledges",
+            }).then((res) => {
+              if(res.status == 200){
+                if(res.status == 200){
+                  if(res.data instanceof Array){
+                    this.articleList = res.data.slice(0,6);
+                  }
+                }
+              }
+            })
+          },
+          moreArticle(){
+
+          },
+        },
+        mounted(){
+          this.zhibiaoEchart = echarts.init(document.getElementById('zhibiao'));
+          this.yonghuEchart = echarts.init(document.getElementById('yonghu'));
+          let zhibiaoData = {
+            xData:["第一周","第二周","第三周","第四周","第五周","第六周","第七周"],
+            data1:[500,600,700,800,800,850,900],
+            data2:[450,600,750,860,850,870,910]
+          }
+          this.zhibiao(zhibiaoData);
+          let yonghuData = {
+            xData:['2018.3', '2018.4', '2018.5', '2018.6', '2018.7', '2018.8', '2018.9'],
+            seriesData:[200, 500, 300, 700, 250, 450, 210]
+          }
+          this.yonghu(yonghuData);
+          this.getArticle();
+          this.getNotice();
+        }
+    }
+</script>
+
+<style scoped>
+  .box{
+    width:100%;
+    height:100%;
+  }
+  .hang1{
+    width:100%;
+    height:48.3%;
+  }
+  .hang1 .head{
+    width:100%;
+    height:14%;
+    background: #f8f9fa;
+    color:#1F233E;
+    /*font-weight: bold;*/
+    padding:0 20px;
+    position: relative;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  .hang1 .head>.title{
+    height:100%;
+    display: flex;
+    align-items: center;
+  }
+  .hang1 .head>.title>img{
+    margin-right:5px;
+  }
+  .hang1 .head>.more{
+    height: 100%;
+    position: absolute;
+    top:0;
+    right:20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    cursor: pointer;
+  }
+  .hang1 .head>.more:hover{
+    color:#409eff;
+  }
+  .tm1{
+    width:44.1%;
+    position:relative;
+    z-index: 1;
+    height:100%;
+    float: left;
+    background: #ffffff;
+    box-shadow:0px 0px 9px 0px rgba(0,0,0,0.1),-2px 0px 9px 0px rgba(0,0,0,0.1),
+    0px 2px 9px 0px rgba(0,0,0,0.1),2px 0px 9px 0px rgba(0,0,0,0.1);
+  }
+  .tm1>.contain{
+    height:86%;
+    width:100%;
+  }
+  .tm1>.contain>ul{
+    width:100%;
+    height:100%;
+  }
+  .tm1>.contain>ul li{
+    width:100%;
+    box-sizing: border-box;
+    padding:0 20px;
+    box-sizing: border-box;
+    height:16.66%;
+    border-bottom: 1px solid #ebebeb;
+    color:#1F233E;
+    display: flex;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+  }
+  .tm1>.contain>ul li:hover{
+    color:#409eff;
+  }
+  .tm1>.contain>ul li:last-child{
+    border-bottom: none;
+  }
+  .tm1>.contain>ul li>img{
+    margin-right:5px;
+  }
+  .tm1>.contain>ul li>.zi{
+    font-size: 14px;
+  }
+  .tm1>.contain>ul li>.time{
+    position: absolute;
+    top:0;
+    right:20px;
+    height:100%;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+  }
+  .fenge1{
+    width:0.9%;
+    height:100%;
+    float: left;
+    background: #f0f1f6;
+  }
+  .tm2{
+    width:55%;
+    height:100%;
+    float: left;
+    box-shadow:0px 0px 9px 0px rgba(0,0,0,0.1),-2px 0px 9px 0px rgba(0,0,0,0.1),
+    0px 2px 9px 0px rgba(0,0,0,0.1),2px 0px 9px 0px rgba(0,0,0,0.1);
+    background: #fff;
+  }
+  .tm2>.contain{
+    width:100%;height:86%;
+    box-sizing: border-box;
+    padding:5px 0;
+  }
+  .tm2>.contain>ul{
+    width:100%;
+    height:100%;
+  }
+  .tm2>.contain>ul li{
+    width:50%;
+    height:33.3%;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    padding:0 20px;
+    border-bottom:1px solid rgba(235,235,235,1);
+    cursor: pointer;
+  }
+  .tm2>.contain>ul li:nth-child(5),.tm2>.contain>ul li:nth-child(6){
+    border:none;
+  }
+  .tm2>.contain>ul li>.img{
+    width:80px;
+    height:100%;
+    display: flex;
+    align-items: center;
+    position: absolute;
+    left:20px;
+    top:0;
+    box-sizing: border-box;
+    /*padding:0 0px;*/
+  }
+  .tm2>.contain>ul li>.img>img{
+    width:70%;
+  }
+  .tm2>.contain>ul li>.c{
+    width:100%;
+    height:100%;
+    box-sizing: border-box;
+    padding:1.5% 5px 1.5% 68px;
+    color:#1F233E;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .tm2>.contain>ul li>.c:hover{
+    color:#409eff;
+  }
+  .tm2>.contain>ul li>.c>.title{
+    font-weight: bold;
+    margin-bottom:2px;
+    position: relative;
+    font-size: 14px;
+  }
+  .tm2>.contain>ul li>.c>.title>img{
+    position:absolute;
+    right:0;
+    top:0;
+    width:16px;
+  }
+  .tm2>.contain>ul li>.c>.sub{
+    width:100%;
+    font-size: 12px;
+    overflow : hidden; -webkit-line-clamp: 2; text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical;
+  }
+  .fenge2{
+    width:100%;
+    height:2.3%;
+    background: #f0f1f6;
+  }
+  .tm3{
+    padding:5px;
+    box-sizing: border-box;
+    width:100%;
+    height:49.4%;
+    background: #fff;
+    display: flex;
+    box-shadow:0px 0px 9px 0px rgba(0,0,0,0.1),-2px 0px 9px 0px rgba(0,0,0,0.1),
+    0px 2px 9px 0px rgba(0,0,0,0.1),2px 0px 9px 0px rgba(0,0,0,0.1);
+  }
+  .tm3>.zhibiao{
+    width:45%;
+    height:100%;
+    position:relative;
+  }
+  .tm3>.zhibiao>#zhibiao{
+    width:100%;
+    height:100%;
+  }
+  .tm3>.zhibiao>.t{
+    position:absolute;
+    right:3%;
+    top:5px;
+    width:85px;
+    height:21px;
+    border-radius:1px;
+    border:1px solid rgba(232,237,241,1);
+    display: flex;
+    font-size: 14px;
+  }
+  .tm3>.zhibiao>.t>div{
+    width:33.3%;
+    height:100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f8f8fb;
+    cursor: pointer;
+  }
+  .tm3>.zhibiao>.t>div.active{
+    background: #1f98f3;
+  }
+  .tm3>#yonghu{
+    width:55%;
+    height:100%;
+  }
+</style>

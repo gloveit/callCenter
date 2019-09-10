@@ -1,0 +1,577 @@
+<template>
+  <div class="base">
+    <div class="base_left">
+      <div class="but">
+        <el-tooltip content="添加" placement="top">
+            <el-button type="success" icon="el-icon-circle-plus" circle size='small' @click="addSort"></el-button>
+          </el-tooltip>
+          <el-tooltip content="修改" placement="top">
+            <el-button type="primary" icon="el-icon-edit" circle size='small' @click="changeSort"></el-button>
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top">
+            <el-button type="danger" icon="el-icon-delete" circle size='small' @click="removeSort"></el-button>
+          </el-tooltip>
+      </div>
+      <!-- 添加知识库类别 -->
+      <el-dialog
+        title="添加知识库"
+        :visible.sync="sortaddvisible"
+        width="30%"
+        >
+        <el-form  :model="addSortname" :inline="true">
+          <el-form-item label="类别名称">
+            <el-input v-model="addSortname.name" placeholder="请输入知识库类别名称" size="small"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="handleClose">取 消</el-button>
+          <el-button type="primary" @click="sureAddSort">确 定</el-button>
+        </span>
+      </el-dialog>
+      <!-- 修改知识库类名 -->
+      <el-dialog
+        title="修改知识库"
+        :visible.sync="sortchangevisible"
+        width="30%"
+        >
+        <el-form  :model="changeSortname" :inline="true">
+          <el-form-item label="原类别名称">
+            <el-input v-model="changeSortname.oldname" size="small" :disabled="true" ></el-input>
+          </el-form-item>
+          <el-form-item label="新类别名称">
+            <el-input v-model="changeSortname.newname" placeholder="请输入新知识库类别名称" size="small"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="changeClose">取 消</el-button>
+          <el-button type="primary" @click="sureChangeSort">确 定</el-button>
+        </span>
+      </el-dialog>
+
+      <el-tree :data="treedata"  @node-click="handleNodeClick"  class="knowtree" :highlight-current="true"></el-tree>
+    </div>
+    <div class="base_right" >
+      <div class="base_right_top">
+        <el-button size="small" class="btn_add" @click="goAddarticle">新增文章</el-button>
+        <el-button type="info" size="small" class="btn_allcon" @click="getAllarticle">所有文章</el-button>
+      </div>
+      <div class="tab_wrap">
+        <el-table
+          :data="pagetableData"
+          style="width:100%;height:90% ;background:#f0f1f6;overflow:auto"  class="article"  :show-header="false" :highlight-current-row="true" ref="tab"
+          >
+          <el-table-column type="index" :index="changeIndex" width="40" align="right" class-name="seq_con"></el-table-column>
+
+          <el-table-column
+            prop="title"
+            label="标题"
+            width="180"  class-name="title-left">
+            <template slot-scope="scope">
+              <a href="#"  class="detailhref" @click="goarticledetail(scope.row)">{{scope.row.title}}</a>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="istop"
+            label="置顶"
+            width="60">
+            <template slot-scope="scope">
+              <div v-if="scope.row.istop===true"><el-button type="text" size="small" icon="el-icon-view">置顶</el-button></div>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="isplay"
+            label="播放"
+            width="60">
+            <template slot-scope="scope">
+              <div v-if="scope.row.isplay===true"><el-button type="text" size="small" icon="el-icon-service">播放</el-button></div>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="author"
+            label="作者">
+          </el-table-column>
+          <el-table-column
+            prop="create_time"
+            label="创作时间">
+          </el-table-column>
+          <el-table-column
+            prop="action"
+            label="操作"
+            width="320"
+            >
+            <template slot-scope="scope">
+              <el-button type="primary" size="small" class="abut" @click="cancelTop(scope.row,scope.$index)">{{topbtn=scope.row.istop===true?'取消置顶':'置顶'}}</el-button>
+              <el-button type="success" size="small" class="abut" @click="cancelPlay(scope.row,scope)">{{playbtn=scope.row.isplay===true?'取消播放':'播放'}}</el-button>
+              <el-button type="primary" size="small" class="abut" @click="changeArticle(scope.row,scope.$index)">修改</el-button>
+              <el-button type="danger" size="small" class="abut" @click="deleteArticle(scope.row,scope.$index)">删除</el-button>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="detail"
+            label="详情"
+            width="60"
+            >
+            <!-- <template slot-scope="scope">
+              <a href="#"  class="detailhref" @click="goarticledetail(scope.row)">详情</a>
+            </template> -->
+          </el-table-column>
+        </el-table> 
+        
+        <el-pagination 
+          background
+          :page-size="pagenumber"
+          layout="total,prev, pager, next,jumper"
+          :total="allcon" style="float:right;"
+          @current-change="changeCon"
+          :current-page="current"
+          >
+        </el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name:'knowledgeBase',
+    data() {
+      return {
+        treedata: [],
+        defaultProps: {
+          children: 'children',
+          label: 'label'
+        },
+        pagetableData:[],
+        sortaddvisible:false,
+        sortNodedata:'',
+        sortchangevisible:false,
+        addSortname:{
+          name:''
+        },
+        changeSortname:{
+          oldname:'',
+          newname:''
+        },
+        tableData: [],
+        allcon:0,
+        pagenumber:10,
+        taindex:0,
+        topbtn:'',
+        playbtn:'',
+        current:1,
+      }
+    },
+    methods: {
+      handleNodeClick(data,node,root) {
+        let that = this;
+        that.sortNodedata = data;
+        that.changeSortname.oldname = data.label;
+        let id = data.id;
+        this.axios({
+          method:'post',
+          url:"/knowledge/findKnowledgeByTid",
+          params:{
+            id:id
+          }
+        }).then(res=>{
+          let data = res.data;
+          if(data.length){
+            that.tableData = [];
+            let first = {};
+              for(let i=0;i<data.length;i++){
+                if(data[i].isplay === true && data[i].istop === true){
+                  let {title,id,isplay,istop,create_time} = data[i];
+                  let author = data[i].user.name;
+                  let time = create_time.slice(0,10);
+                  Object.assign(first,{title:title},{id:id},{istop:istop},{isplay:isplay},{create_time:time})
+                }else{
+                  if(data[i].istop === true && data[i].isplay === false){
+                    let {title,id,isplay,istop,create_time} = data[i];
+                    let author = data[i].user.name;
+                    let time = create_time.slice(0,10);
+                    that.tableData.unshift({title:title,id:id,istop:istop,isplay:isplay,create_time:time})
+                  }else{
+                    let {title,id,isplay,istop,create_time} = data[i];
+                    let author = data[i].user.name;
+                    let time = create_time.slice(0,10);
+                    that.tableData.push({title:title,id:id,istop:istop,isplay:isplay,create_time:time})
+                  }
+                }
+              };
+              if(JSON.stringify(first) != "{}"){
+                that.tableData.unshift(first);
+              }
+          }
+        })
+      },
+      handleClose() {
+        this.sortaddvisible = false
+      },
+      addSort () {
+        this.sortaddvisible = true
+      },
+      // 确认添加知识库类别
+      sureAddSort () {
+        let that = this;
+        let name = that.addSortname.name;
+        // console.log(name)
+        this.axios({
+          method:'post',
+          url:"/knowledge/addType",
+          params:{
+            name:name
+          }
+        }).then(res=>{
+          that.sortaddvisible = false;
+          // console.log(res.data);
+          let data = res.data.date;
+          that.addSortname.name = '';
+          that.treedata.push({label:data.name,id:data.id});
+          this.$message({message:'添加类别成功',type:"success"});
+        })
+      },
+      changeSort () {
+        this.sortchangevisible = true
+      },
+      changeClose () {
+        this.sortchangevisible = false
+      },
+      // 修改确认知识库类别
+      sureChangeSort () {
+        let that = this;
+        let inde = that.treedata.findIndex(el=>el.label == that.changeSortname.oldname);
+        let id = that.treedata[inde].id;
+        let name = that.changeSortname.newname;
+        this.axios({
+          method:"post",
+          url:'/knowledge/updateType',
+          params:{
+            id:id,
+            name:name
+          }
+        }).then(res=>{
+          let status = res.data.status;
+          let data = res.data.date;
+          if(status === 'success'){
+            that.sortchangevisible = false;
+            that.changeSortname.newname = '';
+            this.$set(that.treedata[inde],'label',data.name);
+            this.$message({message	:"类别修改成功",type:"success"})
+          }else{
+            this.$message({message	:"类别修改失败",type:"warning"})
+          }
+        })
+      },
+      // 删除类别操作
+      removeSort () {
+        let that = this;
+        let id= that.sortNodedata.id;
+        let name = that.sortNodedata.label;
+        // console.log(id);
+        this.$confirm('此操作将永久删除'+name+', 是否继续?','提示',{
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(()=>{
+          this.axios({
+            method:'post',
+            url:"/knowledge/deleteTypeById",
+            params:{
+              id:id
+            }
+          }).then(res=>{
+            let status = res.data.status;
+            if(status === 'success'){
+              let inde = that.treedata.findIndex(el=>el.id === id);
+                  that.treedata.splice(inde,1);
+                  this.$message({
+                  type: 'success',
+                  showClose:true,
+                  message: '删除成功!'
+                });    
+            }else{
+              this.$message({
+                  type: 'warning',
+                  showClose:true,
+                  message: '文章类别删除失败!'
+                }); 
+            }
+          })
+        }).catch(()=>{
+          this.$message({
+            type: 'info',
+            showClose:true,
+            message: '取消删除'
+          });
+        })
+      },
+      changeCon (page) {
+        this.current = page;
+        let start = this.pagenumber*(page-1);
+        let end = this.pagenumber*page;
+        this.pagetableData = this.tableData.slice(start,end)
+      },
+      //置顶
+      cancelTop (data,index) {
+        console.log(data)
+        let that = this;
+        let status = data.istop;
+        let id = data.id
+        let startPage = (that.current - 1)*6+index
+        if(status){
+           this.axios({
+             method:'post',
+             url:"/knowledge/updateIsTop",
+             params:{
+               id:id,
+               istop:false
+             }
+           }).then(res=>{
+             let status = res.data.status;
+             let data = res.data.date;
+             if(status === 'success'){
+              that.tableData = [];
+              that.initallArticle()
+             }
+           })
+        }else{
+          this.axios({
+            method:'post',
+            url:"/knowledge/updateKnowledge",
+            params:{
+              id:id,
+              istop:true
+            }
+          }).then(res=>{
+              let data = res.data.date;
+              let status = res.data.status;
+              if(status === 'success'){
+                // that.tableData.splice(startPage,1);
+                // let {title,id,isplay,istop,create_time} = data;
+                // let author = data.user.name;
+                // let time = create_time.slice(0,10);
+                // that.tableData.unshift({title:title,id:id,istop:istop,isplay:isplay,create_time:time});
+                that.tableData = [];
+                that.initallArticle()
+              }
+          })
+        }
+      },
+      // 播放
+      cancelPlay (data,scope) {
+        let that = this;
+        let sta = data.isplay;
+        let title = data.title;
+        let id = data.id;
+        let confirmcon = '';
+        if(sta){
+          confirmcon = '取消播放';
+          sta = false
+        }else{
+          confirmcon = '播放';
+          sta = true
+        }
+        this.$confirm('您确定要'+confirmcon+title+'这篇文章？','提示',{
+          type:'warning ',
+        }).then(()=>{
+          this.axios({
+            method:'post',
+            url:"/knowledge/updateIsPlay",
+            params:{
+              id:id,
+              isplay:sta
+            }
+          }).then(res=>{
+              let status = res.data.status;
+              console.log(res.data)
+              if(status === 'success'){
+                that.tableData = [];
+                that.initallArticle()
+              }            
+          })
+        }).catch(()=>{
+          this.$message({
+            type: 'info',
+            message: '已取消播放文章'
+          });
+        })
+      },
+      cellStyle ({row, column, rowIndex, columnIndex}) {
+        // console.log(row)
+        // console.log(column)
+        // console.log(rowIndex)
+        // console.log(columnIndex)
+      },
+      goarticledetail (data) {
+        console.log(data);
+        let id = data.id;
+        this.$store.commit('getArticleId',id);
+        this.$router.push({path:'/articleDetail'})
+      },
+      goAddarticle () {
+        this.$router.push({path:'/addArticle'})
+      },
+      getAllarticle () {
+        this.tableData = [];
+        this.initallArticle()
+      },
+      initKnowledgeKind () {
+        let that = this;
+        this.axios({
+          method:'get',
+          url:"/knowledge/getTypes"
+        }).then(res=>{
+          let data = res.data;
+          data.forEach(element => {
+            that.treedata.push({label:element.name,id:element.id})
+          });
+        })
+      },
+      initallArticle () {
+        let that = this;
+        this.axios({
+          method:'get',
+          url:"/knowledge/allKnowledges"
+        }).then(res=>{
+          let data = res.data;
+          let first = {};
+          for(let i=0;i<data.length;i++){
+            if(data[i].isplay === true){
+              let {title,id,isplay,istop,create_time} = data[i];
+              let author = data[i].user.name;
+              let time = create_time.slice(0,10);
+              Object.assign(first,{title:title},{id:id},{istop:istop},{isplay:isplay},{create_time:time},)
+            }else{
+              if(data[i].istop === true && data[i].isplay === false){
+                let {title,id,isplay,istop,create_time} = data[i];
+                let author = data[i].user.name;
+                let time = create_time.slice(0,10);
+                that.tableData.unshift({title:title,id:id,istop:istop,isplay:isplay,create_time:time})
+              }else{
+                let {title,id,isplay,istop,create_time} = data[i];
+                let author = data[i].user.name;
+                let time = create_time.slice(0,10);
+                that.tableData.push({title:title,id:id,istop:istop,isplay:isplay,create_time:time})
+              }
+            }
+          };
+          if(JSON.stringify(first) != "{}"){
+            that.tableData.unshift(first);
+          }
+          // console.log(first)
+          // that.tableData.unshift(first);
+          that.allcon = that.tableData.length;
+          that.pagetableData = that.tableData.slice(0,10)
+        })
+      },
+      deleteArticle (data,index) {
+        let that = this;
+        let id = data.id;
+        this.axios({
+          method:"post",
+          url:"/knowledge/deleteKnowledge",
+          params:{
+            id:id
+          }
+        }).then(res=>{
+          let status = res.data.status;
+          let data = res.data;
+          if(status === 'success'){
+            that.tableData = [];
+            that.initallArticle();
+            this.$message({message:"删除成功",type:"success"})
+          }
+        })
+      },
+      changeIndex (index) {
+         return index + (this.current - 1) * 10 + 1+'.';
+      },
+      changeArticle (data) {
+        let id = data.id;
+        this.$store.commit('getArticleId',id);
+        this.$router.push({path:'/changeArticle'})
+      }
+    },
+    mounted () {
+      this.initKnowledgeKind();
+      this.initallArticle()
+    },
+    watch:{
+      tableData:{
+        handler(newvalue,oldvalue){
+          this.pagetableData = newvalue.slice(0,10)
+        }
+      }
+    }
+}
+</script>
+
+<style>
+.base{
+  width: 100%;
+  height: 100%;
+}
+.base_left{
+  width: 200px;
+  height: 100%;
+  float:left;
+  background:#fff
+}
+.base_right{
+  width: calc(100% - 220px);
+  height: 100%;
+  float: left;
+  padding-left:20px;
+  /* background: #f00 */
+}
+.knowtree {
+  margin-top: 20px;
+  font-size: 18px;
+  /* color: #f0f */
+}
+.knowtree ::before{
+  content:""
+}
+.but{
+  padding:20px 0 0 70px;
+
+}
+.base_right_top{
+  margin-top:15px;
+  height: 30px;
+}
+
+.btn_allcon{
+  float:right;
+  margin-right: 15px;
+}
+.btn_add{
+  float:right;
+  margin-right: 15px;
+}
+.article {
+  margin-top: 10px;
+}
+/* .article >.el-table__header-wrapper{
+  display: none!important
+} */
+.abut{
+   width:60px;
+   height:30px;
+   font-size:10px;
+   padding:0
+}
+.detailhref{
+  font-size: 14px;
+  color:#000;
+  padding-left:0px
+}
+.detailhref:hover{
+  text-decoration: underline;
+  color:#000
+}
+.tab_wrap{
+  width: 100%;
+  height: 90%
+}
+</style>

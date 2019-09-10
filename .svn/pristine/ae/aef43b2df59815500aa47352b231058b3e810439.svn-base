@@ -1,0 +1,182 @@
+#chat_content {
+    border-left: 0px solid #dbdbdb;
+    border-top: 1px solid #dbdbdb;
+    border-right: 0px solid #dbdbdb;
+    border-bottom: 1px solid #dbdbdb;
+    width: auto;
+    height: 333px;
+    overflow-y: auto;
+    padding: 5px 5px 5px 5px;
+}
+
+.MIB_msg_l {
+    margin: 5px 0px 8px 0px;
+    border: red solid 0px;
+    height: auto;
+    width: auto;
+    hite-space: nowrap;
+}
+
+.msg_history_sender_displayname {
+    size: 1px;
+    color: #005EAC;
+    height: 10px;
+    line-height: 10px;
+}
+
+a {
+    color: #0082CB;
+    text-decoration: none;
+}
+			
+.MIB_msg_r {
+    margin: 5px 0px 8px 0px;
+    height: auto;
+    line-height: 20px;
+    _margin: 5px 0px 3px 0px;
+}
+
+.msg_time {
+    color: #99998A;
+    padding: 0px 57px 0 57px;
+    height: 20px;
+}
+
+.letter-wo-photo {
+    float: right;
+}
+
+.head_pic {
+    float: left;
+    margin-right: 16px;
+}
+
+.hint_text {
+	width: 100%;
+	color: #99998A;
+	border: #CCC6C6 solid 1px;
+	background-color: rgb(236, 255, 161);
+	margin-bottom: 10px;
+	margin-top: 10px;
+	padding-top: 2px;
+	padding-bottom: 5px;
+}
+
+.picborder_l {
+    padding: 2px;
+    border: 1px solid #CCC;
+    background: white;
+    height: 32px;
+    width: 32px;
+    float: left;
+}
+
+.letter-ta-say {
+    float: left;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border: #CCC6C6 solid 1px;
+    background-color: whiteSmoke;
+    padding: 5px 10px;
+    line-height: 20px;
+    width: auto;
+    max-width: 70%;
+    position: relative;
+    word-break: break-all;
+    word-wrap: break-word;
+    -webkit-box-shadow: 0px 0px 2px 2px rgba(241, 240, 234, 1.0);
+}
+
+.letter-ta-arrow {
+    background: transparent url('../images/left-arrow.png') no-repeat 0px top;
+    width: 11px;
+    height: 18px;
+    position: absolute;
+    top: 5px;
+    left: -11px;
+    overflow: hidden;
+}
+
+.letter-wo-say {
+    float: right;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border: 1px #DFDBBD solid;
+    background-color: lemonchiffon;
+    padding: 5px 10px;
+    margin-right: 16px;
+    width: auto;
+    max-width: 70%;
+    position: relative;
+    word-break: break-all;
+    word-wrap: break-word;
+    -webkit-box-shadow: 0px 0px 2px 2px rgba(253, 242, 205, 1.0);
+}
+
+.letter-wo-arrow {
+    background: transparent url('../images/right-arrow.png') no-repeat 0px top;
+    width: 11px;
+    height: 18px;
+    position: absolute;
+    top: 5px;
+    right: -11px;
+    overflow: hidden;
+}
+
+.emotion_bg2 {
+	bottom: 121px;
+    left: 5px;
+    z-index: 999;
+    display: block;
+
+	width: 300px;
+    height: 153px;
+    
+    background-color: #ffffdd;
+    position: fixed;
+    position: absolute;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: 0px 0px 5px 3px rgba(204, 193, 164, 1.0);
+    -moz-box-shadow: 0px 0px 5px 3px rgba(204, 193, 164, 1.0);
+}
+
+ #operateDiv {
+    background: #F7F7F7 url(../images/toolbar_bg.png);
+    height: 25px;
+    _height: 0px;
+    border: 1px solid #DADADA;
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+    padding-right: 5px;
+    border-right: 1px solid #DADADA;
+}
+
+.emotion_select_top {
+    border: 1px solid #d8d8d8;
+    border-right: 1px solid #FFFFFF;
+    border-bottom: 1px solid #FFFFFF;
+    float: left;
+    padding: 3px;
+}
+
+.emotion_over {
+    border: 1px solid blue;
+    float: left;
+    padding: 3px;
+}
+
+.emotion_bg2 span {
+    cursor: pointer;
+}
+
+.sendstatus {
+    float: right;
+    padding-right: 5px;
+    width: auto;
+    display: none;
+}

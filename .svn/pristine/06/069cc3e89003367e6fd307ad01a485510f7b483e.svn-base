@@ -1,0 +1,221 @@
+<template>
+   <div class="wrap">
+     <p  class="btn">
+       <el-tooltip content="返回知识库" placement="top">
+          <el-button icon="el-icon-arrow-left"  class="back" @click="back"></el-button>
+        </el-tooltip>
+     </p>
+     <div class="top">
+        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm" inline>
+          <el-form-item label="标题" prop="title">
+            <el-input v-model="ruleForm.title" size="small" style="width:260px"></el-input>
+          </el-form-item>
+          <el-form-item label="文章类别" prop="articleKind" size="small"  style="width:420px">
+            <el-select v-model="ruleForm.articleKind" placeholder="请选择文章类别" @change="getarticlekind" style="width:280px">
+              <el-option :label="item.label" :value="item.value" v-for="item in akind" :key="item.id"></el-option>
+              <!-- <el-option label="类别二" value="beijing"></el-option> -->
+            </el-select>
+          </el-form-item>
+          <el-form-item label="是否置顶" prop="delivery" style="width:180px">
+            <el-switch v-model="ruleForm.delivery" @change="getTopStatus"></el-switch>
+          </el-form-item>
+
+          <el-form-item style="width:100%" class="quill">
+           <el-row style="height:300px;width:100%;word-break:break-all" >
+            <quill-editor v-model="content"
+              :options="editorOption"
+              @blur="onEditorBlur($event)"
+              @focus="onEditorFocus($event)"
+              @change="onEditorChange($event)" class="quill-editor">
+            </quill-editor>
+           </el-row> 
+          </el-form-item>
+            <p class="submitBtn">
+              <el-button type="primary" size="small" @click="subArticle">提交</el-button>
+            </p>
+        </el-form>
+        
+        
+     </div>
+   </div>
+</template>
+
+<script>
+import { quillEditor } from 'vue-quill-editor'
+import * as Quill from 'quill' 
+   
+  
+var fonts = ['SimSun', 'SimHei','Microsoft-YaHei','KaiTi','FangSong','Arial','Times-New-Roman','sans-serif']; 
+  var Font = Quill.import('formats/font'); 
+  Font.whitelist = fonts; //将字体加入到白名单 
+  Quill.register(Font, true);
+export default {
+  data:function(){
+   return{
+    content:'',
+    ruleForm:{
+      title:'',
+      articleKind:'',
+      delivery:false,
+    },
+    akind:[],
+    radio:'0',
+    // 新增文章类型id
+    articleId:'',
+    articleStatus:false,
+    con:"",
+    editorOption:{
+      modules:{
+            toolbar:[
+              ['bold', 'italic', 'underline'], 
+              ['code-block'],
+  
+              // [{ 'header': 1 }, { 'header': 2 }],   
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'script': 'sub'}, { 'script': 'super' }], 
+              [{ 'indent': '-1'}, { 'indent': '+1' }],  
+              // [{ 'direction': 'rtl' }],        
+  
+              [{ 'size': ['small', false, 'large', 'huge'] }], 
+              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+  
+              [{ 'color': [] }, { 'background':[] }], 
+              [{ 'font': fonts }],    //把上面定义的字体数组放进来
+  
+              [{ 'align': [] }],
+  
+              ['clean'],
+              ['image']
+            ]},
+          placeholder: '请输入内容',
+          theme:'snow'
+    },
+    rules:{
+      title:[
+        { required: true, message: '请输入文章标题', trigger: 'blur' },
+        { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+      ],
+      articleKind: [
+            { required: true, message: '请选择文章类别', trigger: 'change' }
+        ],
+      acontent:[
+        { required: true, min: 2, max: 2000, message: '长度在 2 到 2000 个字符', trigger: 'blur' }
+      ]
+    }
+   }
+  },
+  methods:{
+   onEditorBlur(editor){//失去焦点事件 
+  },
+   onEditorFocus(editor){//获得焦点事件
+   },
+   onEditorChange({editor,html,text}){//编辑器文本发生变化
+    //this.content可以实时获取到当前编辑器内的文本内容
+    // console.log(this.content);
+    // console.log(editor)
+    // console.log(html)
+    // console.log(text)
+    this.con = text;
+   },
+   back () {
+     this.$router.push({path:"/knowledgeBase"})
+   },
+   initArticleKind () {
+     let that = this;
+     this.axios({
+       method:'get',
+       url:"/knowledge/getTypes"
+     }).then(res=>{
+       let data = res.data;
+       data.forEach(el=>{
+         that.akind.push({label:el.name,value:el.id})
+       })
+     })
+   },
+   getarticlekind (data) {
+     this.articleId = data
+   },
+   getTopStatus (data) {
+    //  console.log(data)
+     this.articleStatus = data;
+   },
+   subArticle () {
+     let that = this;
+     let title = that.ruleForm.title;
+     let articleId = that.articleId;
+     let articleStatus = that.articleStatus;
+     let content = that.content;
+     this.$refs['ruleForm'].validate((valid)=>{
+       if(valid){
+         this.axios({
+           method:'post',
+           url:"/knowledge/addKnowledge",
+           params:{
+             title:title,
+             body:content,
+             tid:articleId,
+             istop:articleStatus
+           }
+         }).then(res=>{
+           console.log(res.data)
+           let status = res.data.status;
+           if(status === 'success'){
+             that.ruleForm.title = "";
+             that.articleKind = '';
+             that.articleStatus = false;
+             that.content = '';
+             this.$message({message:"新增文章成功",type:'success'})
+           }else{
+             this.$message({message:"新增文章失败",type:'success'})
+           }
+         })
+       }else{
+         this.$message({message:"请完善文章信息",type:'warning'})
+       }
+     })
+   },
+  },
+  mounted () {
+    this.initArticleKind();
+  }
+}
+  
+</script>
+
+<style scoped>
+.quill-editor {
+  height: 280px;
+  width: calc(100% - 100px);
+  /* width:98%; */
+  /* width: 1000px; */
+  margin-left:100px
+ }
+ .wrap{
+   width: 100%;
+   height: 100%;
+ }
+ .top{
+   width: 100%;
+   height: 100px;
+   /* background:#0f0 */
+ }
+ .back{
+  width:40px;
+  height:30px;
+  padding:0;
+  float:right;
+  margin-right:20px
+ }
+ .btn{
+   height:25px;
+   padding-top:5px;
+   line-height:25px
+ }
+ .submitBtn{
+   padding-top:20px;
+   /* padding-right:93px; */
+   text-align: center;
+   height:50px;
+   line-break: 50px;
+ }
+</style>

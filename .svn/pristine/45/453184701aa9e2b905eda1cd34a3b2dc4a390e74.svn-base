@@ -1,0 +1,165 @@
+<template>
+  <div class="conAll">
+    <div class="title">
+      <img src="@/assets/imgs/8.0.png" alt="">
+    </div>
+    <div class="contenta" @mouseleave="showMenu2(false)">
+      <vue-scroll :ops="ops">
+        <ul>
+          <li @mouseenter="enterMenu(item.path,index,item.title,item.children)" :class="activeIndex==index?'active':''" v-for="(item,index) in menuList" :key='index'>
+            <img :src="item.img" alt="">
+          </li>
+        </ul>
+      </vue-scroll>
+      <div class="menu2" v-show="menu2Show">
+        <div class="title">{{title}}</div>
+        <div class="c">
+          <vue-scroll :ops="ops">
+            <ul class="ul">
+              <li v-for="(item,index) in menu2List" :class="menu2Active==item.title?'active':''" @click="goRoute(item.path,item.title,index)">{{item.title}}</li>
+            </ul>
+          </vue-scroll>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'left-menu',
+  data () {
+    return {
+      ops:{
+        bar: {
+          background: "rgba(144,147,153,.3)",
+          onlyShowBarOnScroll: false,
+        }
+      },
+      activeIndex:0,
+      menu2Show:false,
+      title:"",
+      menu2List:[]
+    }
+  },
+  computed:{
+    menuList(){
+      return this.$store.state.menuList
+    },
+    menu2Active(){
+      return this.$store.state.menu2Active;
+    }
+  },
+  methods:{
+    enterMenu(path,index,title,list){
+      this.activeIndex = index;
+      this.menu2Show = true;
+      this.title = title;
+      this.menu2List = list;
+    },
+    showMenu2(n){
+      this.menu2Show = false;
+    },
+    goRoute(path,title,index){
+      if(!path){return}
+      let curTabs = this.$store.state.tabViews;
+      let a = curTabs.findIndex((value) => {
+        return value.title == title;
+      })
+      if(a == -1){
+        curTabs.push({title:title,path:path});
+      }
+      this.$router.push({path:path});
+      //修改标签列表
+      this.$store.commit("changeTabViews",curTabs);
+      window.sessionStorage.setItem('tabViews', JSON.stringify(curTabs));
+      //修改左侧二级菜单激活
+      this.$store.commit("cmenu2Active",title)
+      window.sessionStorage.setItem('menu2Active', title);
+      //修改标签激活
+      this.$store.commit("ctabViewActive",title);
+      window.sessionStorage.setItem('tabViewActive', title);
+    }
+  }
+}
+</script>
+
+<style scoped>
+  .conAll{
+    /*width:5.2%;*/
+    width:4.8%;
+    height:100%;
+    float: left;
+    background: #1F233E;
+    position:relative;
+    z-index: 2;
+  }
+  .title{
+    width:100%;
+    height:10%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+  }
+  .contenta{
+    width:100%;
+    height:90%;
+    box-sizing: border-box;
+    overflow: visible;
+    position: relative;
+  }
+  .contenta li{
+    /*width:55px;*/
+    width:100%;
+    height:55px;
+    margin:auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+  .contenta li:hover,.contenta li.active{
+    background: #799AFA;
+  }
+  .contenta li>img{
+    width:28px;
+  }
+  .menu2{
+    position: absolute;
+    bottom:0;
+    right:-172px;
+    width:172px;
+    height:100%;
+    background: #fff;
+    color:#1F233E;
+  }
+  .menu2>.title{
+    font-size: 15px;
+    height:40px;
+    width:100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom:1px solid #DFDFE1;
+  }
+  .menu2>.c{
+    width:100%;
+    height:calc(100% - 40px);
+  }
+  .ul{
+    width:172px;
+  }
+  .ul li{
+    height:36px;
+    width:100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .ul li:hover,.ul li.active{
+    background: #799AFA;
+  }
+</style>

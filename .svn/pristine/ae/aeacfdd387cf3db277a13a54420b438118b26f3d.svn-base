@@ -1,0 +1,120 @@
+<template>
+    <div class="article">
+      <!-- <div> -->
+        <P class="btnback">
+          <el-tooltip content="返回知识库" placement="top">
+          <el-button icon="el-icon-arrow-left"  class="back" @click="back"></el-button>
+          </el-tooltip>
+        </p>
+        <h3 class="titlestyle">{{title}}</h3>
+        <p class="article_author">作者:{{author}}</p>
+        <p class="article_time">创作时间:{{createtime}}</p>
+        <vue-scroll :ops="ops">
+          <div class="content">
+            <!-- {{content}} -->
+            <div v-html="content"></div>
+            <!-- <p class="article_author">{{author}}</p>
+            <p class="article_time">{{createtime}}</p> -->
+          </div>
+        </vue-scroll>
+      <!-- </div> -->
+		</div>
+</template>
+
+<script>
+export default {
+	name:'articleDetail' ,
+	data () {
+		return {
+      title:'',
+      ops:{
+        bar:{
+          background: "rgba(144,147,153,.3)",
+          onlyShowBarOnScroll: false,
+        }
+      },
+      articleId:'',
+      content:"",
+      author:"",
+      createtime:""
+    }
+  },
+  watch: {
+    '$store':{
+      handler(newvalue,oldvalue){
+        // console.log(newvalue);
+        this.articleId = newvalue.state.articleId;
+      },
+      immediate:true,
+    }
+  },
+  methods:{
+    back () {
+      this.$router.push({path:'/knowledgeBase'})
+    },
+    initEveryArticle () {
+      let that = this;
+      let id = that.articleId;
+      this.axios({
+        method:"post",
+        url:"/knowledge/findKnowledge",
+        params:{
+          id:id
+        }
+      }).then(res=>{
+        // console.log(res.data);
+        let data = res.data;
+        let {id,title,body,create_time,user} = data;
+        let author = user.name;
+        let createtime = create_time.slice(0,10);
+        that.title = title;
+        console.log(body);
+        that.content = body;
+        that.author = author;
+        that.createtime = createtime;
+      })
+    }
+  },
+  mounted () {
+    this.initEveryArticle()
+  }
+}
+</script>
+
+<style>
+.article{
+  width: 100%;
+  height: 100%;
+}       
+.back{
+  width:50px;
+  height:30px;
+  padding:0;
+  float:right;
+  margin-right:20px
+}
+.titlestyle{
+  text-align: center;
+  font-size: 22px;
+}
+.content{
+  width: 100%;
+  height: 88%;
+  font-size: 16px;
+  padding: 15px;
+  /* background:#0f0 */
+}
+.article_author{
+  text-align: center;
+  font-size: 14px;
+  color:#ccc
+}
+.article_time{
+  font-size: 14px;
+  text-align: center;
+  color:#ccc
+}
+.btnback{
+  height: 30px;
+}
+</style>

@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+		<title>微信聊天</title>
+		<meta http-equiv="pragma" content="no-cache">
+		<meta http-equiv="cache-control" content="no-cache">
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		
+		<meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta content="yes" name="apple-mobile-web-app-capable" />
+		<link rel="stylesheet" href="layui/css/layui.css">
+		
+		<script type="text/javascript" src="js/jquery.1.7.2.js"></script>
+		<script type="text/javascript" src="js/jquery.query-2.1.7.js"></script>
+		<script type="text/javascript" src="js/json2.js"></script>
+		<script type="text/javascript" src="js/base64.js"></script>
+		<script type="text/javascript" src="js/TplTool.js?v=1.0.0.10"></script>
+		
+
+	</head>
+	<style>
+body{padding: 10px;}
+</style>
+
+
+<body>
+
+
+
+<div class="layui-row">
+    <div id="chatButtons" class="layui-col-xs3">
+
+    </div>
+    <div id="chatFrames" class="layui-col-xs9">
+
+      	<div id="noSession" style="width:100%">当前没有会话。</div>
+
+    </div>
+  </div>
+</div>
+
+<script src="layui/layui.all.js"></script>
+
+<script id="chatButtonTemplate" type="text/html" >
+	<button class="layui-btn layui-btn-primary"  data-iframe-id="{{item.frame_id}}" data-node-id="{{item.node_id}}" 
+		style="width:100%; margin-left: 0px;"><label>{{item.node_id}}</label><span class="layui-badge" style="display:none;">0</span></button>
+</script>
+
+<script id="iframeTemplate" type="text/html" >
+	<iframe id="{{getFrameId(item.node_id)}}" data-node-id="{{item.node_id}}" name="iframe" frameborder="0" scrolling="yes" 
+		src="./simpleChat.html?node_id={{item.node_id}}&t={{item.time}}"  width="100%" height="100%" style="display:none;"></iframe>
+</script>
+
+<script>
+
+    function log(s) {
+    	if (window.console && window.console.log) {
+    	  window.console.log(s);
+    	}
+    }
+
+var operator = window.opener ? window.opener : window.parent;
+
+window.SIM = operator.SIM;
+window.SAM = operator.SAM;
+window.SimpleAgentMgr = operator.SimpleAgentMgr;
+window.SXC = operator.SXC;
+
+if (window.SAM == null) {
+	$("#noSession").text("加载 SAM 组件失败。");
+}
+
+var serviceUrl = operator.$("#serviceUrl").val();
+
+if (!serviceUrl) {
+	var config = operator.SimpleAgentUIComponent.onConnectParams();
+	if (config) {
+		serviceUrl = config.accessInfo.service_base_url;
+	}
+}
+
+window.serviceUrl = serviceUrl;
+
+/**
+ * key: nodeId, value: eventObject 
+ */
+window.eventStack = {};
+	
+String.prototype.trim = function(){   
+	return this.replace(/(^\s*)|(\s*$)/g, "");   
+}   
+
+function onResize(){
+	$("iframe").css("height", $(window).height() - 20);
+}
+
+$(window).resize(function() {
+
+	onResize();
+
+});
+
+setTimeout(function() {
+	onResize();
+}, 300);
+
+SimpleAgentMgr.addEventListener(dealOnAgentEvent, "chatContainer.onEvent");
+
+window.onbeforeunload = function() {
+
+	if (window.parent && window.parent.SAM) {
+		window.parent.SAM.removeEventListener(dealOnAgentEvent);
+	}
+	
+};
+
+function dealOnAgentEvent(eventObject) {
+	
+	var eventType = eventObject.eventType;
+	var data = eventObject.data;
+
+	log("chat container on:" + eventType);
+
+ 	if (eventType == "recv_msg") {
+		
+		var msg = eventObject.msg;
+		
+		if (msg.inputingPreview) {
+			// ingore this.
+			log("is inputing");
+			return;
+		}
+		
+		var nodeId = msg.from;
+		
+		log("node id:" + nodeId);
+		
+		// msg.nick_name
+		
+		/**
+		 * 将消息
+		 */
+		if (!hasChat(nodeId)) {
+			eventStack[nodeId] = eventObject;
+		}
+		else {
+			eventStack[nodeId] = null;
+		}
+		
+		/**
+		 * 这里分为几种情况：
+		 * 1. 原先没有聊天窗口的
+		     直接打开，并显示聊天窗口即可。
+		   2. 已经有多个窗口，当前的收消息方是激活的
+		     直接显示
+		   3. 已经有多个窗口，当前的收消息方不是激活的
+		     按钮上显示累计的 未读消息数量。
+		 */
+		if ($("iframe").length <= 0) {
+			log("before open chat");
+			openChat(nodeId);
+			
+			log("after open chat");
+		}
+		else {
+			openChat(nodeId, { noShift: true });
+			if (!isActive(nodeId)) {
+				addMsgCount(nodeId);
+			}
+		}
+		
+		if (msg.nick_name) {
+			updateNickName(nodeId, msg.nick_name);
+		}
+		
+	}
+
+}
+
+function updateNickName(nodeId, nickName) {
+	var iframeId = getFrameId(nodeId);
+	$("button[data-iframe-id='" + iframeId + "']").find("label").text(nickName);
+}
+
+function addMsgCount(nodeId) {
+	var iframeId = getFrameId(nodeId);
+	
+	var $this = $("button[data-iframe-id='" + iframeId + "']").find("span");
+	
+	$this.text(parseInt($this.text()) + 1).show();
+	
+}
+
+function getFrameId(nodeId) {
+	return "iframe" + nodeId.replace(/\./g, "_");
+}
+
+function hasChat(nodeId) {
+	var iframeId = getFrameId(nodeId);
+	
+	return ($("#" + iframeId).length > 0);
+}
+
+function isActive(nodeId) {
+	var iframeId = getFrameId(nodeId);
+	return $("button[data-iframe-id='" + iframeId + "']").hasClass("layui-btn-normal");
+	
+}
+
+function openChat(nodeId, options) {
+
+	if (nodeId == null) {
+		log("node id is NULL");
+		alert("error of null nodeId");
+		return;
+	}
+	
+	nodeId = nodeId.trim();
+
+	/**
+	 * 检查该指定的 对象是否在 范围内，若不再，则添加聊天界面。
+	 */
+	var iframeId = getFrameId(nodeId);
+	
+	if ($("#" + iframeId).length <= 0) {
+	
+		log("add iframe");
+		
+		TplTool("iframeTemplate").render({"node_id": nodeId, "time": new Date().getTime() }, null, function(html) {
+		    $("#chatFrames").append(html);
+		});	
+		
+		TplTool("chatButtonTemplate").render({"node_id": nodeId, "frame_id": iframeId }, null, function(html) {
+		    $("#chatButtons").append(html);
+		});	
+		
+		setTimeout(function() {
+		
+			$("button").unbind("click").click(function() {
+				
+				openChat($(this).attr("data-node-id"), { clearMsgCount: true}) ;
+			});
+		
+			onResize();
+		}, 100);
+	}
+	
+	if (options && options.noShift) {
+		// do nothing.
+	}
+	else {
+		shiftIFrame(iframeId, options);
+	}
+
+}
+
+function closeChatWindow(nodeId) {
+
+	var iframeId = getFrameId(nodeId);
+	
+	if ($("#" + iframeId).length > 0) {
+		
+		/**
+		 * 先删除对应的组件
+		 */
+		$("#" + iframeId).remove();
+		$("button[data-iframe-id='" + iframeId + "']").remove();
+		
+		/**
+		 * 然后找出当前是否还剩下有组件的，切换过去，否则关闭整个窗口。
+		 */
+		if ($("iframe").length > 0) {
+			shiftIFrame($("iframe").last().attr("id"));
+		}
+		else {
+			$("#noSession").show();
+		}  
+		
+	}
+}
+
+function shiftIFrame(iframeId, options) {
+
+	log("shift IFrame id:" + iframeId);
+
+	$("#noSession").hide();
+
+	$("iframe").hide();
+	$("#" + iframeId).show();
+	
+	$("button").removeClass("layui-btn-normal");
+	$("button").addClass("layui-btn-primary");
+	
+	$("button[data-iframe-id='" + iframeId + "']").addClass("layui-btn-normal");
+	$("button[data-iframe-id='" + iframeId + "']").removeClass("layui-btn-primary");
+	
+	if (options && options.clearMsgCount) {
+		$("button[data-iframe-id='" + iframeId + "']").find("span").text(0).hide();
+	}
+	
+	setTimeout(function() {
+		if ($("#" + iframeId)[0].contentWindow) {
+			$("#" + iframeId)[0].contentWindow.$("#jdres_msgArea").focus();
+		}
+	}, 300);
+	
+}
+
+log("chat container init ok.");
+
+</script>
+
+</body>
+
+</html>

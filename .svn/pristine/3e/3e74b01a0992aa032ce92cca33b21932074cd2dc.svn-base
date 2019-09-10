@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+		<title>Chat Demo</title>
+		<meta http-equiv="pragma" content="no-cache">
+		<meta http-equiv="cache-control" content="no-cache">
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		
+		<meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta content="yes" name="apple-mobile-web-app-capable" />
+		
+		<link rel=stylesheet type=text/css href="css/chat_window.css"/>
+		<link rel=stylesheet type=text/css href="css/chat_uc_style.css"/>
+		<link rel=stylesheet type=text/css href="js/fileuploader.css"/>
+		<link rel=stylesheet type=text/css href="css/richText.css"/>
+		
+		<link rel=stylesheet type=text/css href="jdres/styles.css"/>
+		<link rel=stylesheet type=text/css href="jdres/skin-min.css?0001"/>
+		
+		<script type="text/javascript" src="js/jquery.1.7.2.js"></script>
+		<script type="text/javascript" src="js/jquery.query-2.1.7.js"></script>
+
+		<script type="text/javascript" src="js/jquery.jplayer.min.js"></script>
+		<link rel=stylesheet type=text/css href="js/talkie/talkieTool.css?0001"/>
+		<script type="text/javascript" src="js/talkie/talkieTool.js?0003"></script>
+		
+		<script type="text/javascript" src="js/md5.js"></script>
+		<script type="text/javascript" src="js/json2.js"></script>
+		<script type="text/javascript" src="js/base64.js"></script>
+		<script type="text/javascript" src="js/TplTool.js?v=1.0.0.14"></script>
+		
+		<script type="text/javascript" src="js/emotions.js?0002"></script>
+		<script type="text/javascript" src="js/chatCommon.js"></script>
+		
+		<script type="text/javascript" src="js/fileuploader.js"></script>
+		<script type="text/javascript" src="js/fileUploadTool.js?0001"></script>
+		<script type="text/javascript" src="js/simpleChat.js?20180507_0001"></script>
+
+		<style>
+			html, body, div {
+			    font-size:12px;
+			    font-family:Verdana, Tohoma, simsun;
+			}
+			
+			.bigcur {
+				cursor: 'images/big.cur'
+			}
+		</style>
+		
+	</head>
+
+	<body >
+
+			<div id="main-win" style=";top:0;width: 100%;height: 100%;">
+			    <div id="win" style="position: absolute;top:0;height: 100%; width:100%; text-align: left;">
+			        <!-- 【建议】设置最小高度和最小宽度 -->
+			        <div class="im-content" name="chatDiv" style="width:100%;min-width:auto;top:0px;margin-top: 0px;">
+			            <div class="im-main-content" style="">
+			                <div class="im-chat-window" style="width:100%;min-width:auto;">
+			                    
+			                    <div id="jdres_chat_content" class="im-chat-list"  >
+
+			                    </div>
+			                    
+			                    <div id="jdres_file-uploader-area" style="clear:both;border:0px solid blue;height:0px;display:none;width:100%;max-height:150px;overflow-y:scroll;">
+    							</div>
+    							
+			                    <div class="im-edit-area">
+			                        <div class="im-edit-toolbar">
+			                            <a href="javascript:;" class="im-icon-word" title="设置字体" id="j_font"></a>
+			                            <a href="javascript:;" class="im-icon-face" title="选择表情" id="j_emotions"></a> 
+			                            <span class="im-icon-file" id="expressionButton" title="发送文件">
+			                            	
+			                            </span>
+			 
+			                            <!-- 上传文件 图片 -->
+			                            <div class="im-upload-content" id="fsUploadProgress" style=" position: absolute; left: 0px; right:0; z-index: 99; bottom: 106px;height:0px"></div>
+			                            
+			                            <span id="inputingPreview" style="display:none;margin-left:10px;"></span>
+			                        </div>
+									
+									<div class="im-edit-ipt-area">
+			                            <textarea id="jdres_msgArea" class="im-edit-ipt" style="overflow-y: auto; font-weight: normal;
+			                            	 font-size: 12px; overflow-x: hidden; word-break: break-all; font-style: normal; outline: none;"
+			                            	  contenteditable="true" hidefocus="true" tabindex="0" ></textarea>
+			                        </div>
+			                        <div class="im-edit-btn-area">
+			                            <div class="im-link-area"></div>
+			                            <div class="im-btn-send-area" title="按Enter键发送,按Ctrl+Enter键换行">
+			                                <a href="javascript:;" class="im-btn im-btn-send" id="sendMsg" onclick="return sendFormMsg()"> 
+			                                	<span class="im-txt">发送</span>
+			    								<span class="im-btn-l"></span>
+			                                </a>
+			                                <a href="javascript:;" class="im-btn im-btn-send-set" title="发送设置" id="changeKeyOption"> 
+				                                <i class="im-icon-arrow-down"></i>
+				    							<span class="im-btn-r"></span>
+			 								</a>
+			                                <!-- 编辑发送浮层 -->
+			                                <div class="im-pop-send-set cbut" style="position: absolute; top: 0; right: -250px;display:none;">
+			                                    <ul class="im-send-set-list">
+			                                        <!-- 当前高亮加class current -->
+			                                        <li class="im-item current" id="hotkey1">
+			                                            <a href="javascript:;" class="im-item-content"> 
+			                                            	<i class="im-icon-right"></i>
+			    											<span class="im-txt">按Enter键发送消息，Ctrl+Enter换行</span>
+			                                            </a>
+			                                        </li>
+			                                        <li class="im-item" id="hotkey2">
+			                                            <a href="javascript:;" class="im-item-content"> 
+			                                            	<i class="im-icon-right"></i>
+			    											<span class="im-txt">按Ctrl+Enter键发送消息，Enter换行</span>
+			                                            </a>
+			                                        </li>
+			                                    </ul>
+			                                </div>
+			                            </div>
+			                            <a href="javascript:;" class="im-btn im-btn-close" id="talk_c"> 
+			                            	<span class="im-txt">结束对话</span>
+			    							<span class="im-btn-l"></span>
+			    							<span class="im-btn-r"></span>
+			                            </a>
+			                            <div class="im-edit-tip" id="chat_count" style="display:none;" >还可以输入<span class="im-word-num">360</span>字</div>
+			                        </div>
+			                    </div>
+			                </div>
+
+			            </div>
+			        </div>
+			    </div>
+			    <div class="thickArea" style="display:none;"></div>
+			    <div id="jquery_jplayer_1" style="height: 0px; background-color: rgb(0, 0, 0);">
+			        <img id="jp_poster_0" style="width: 1366px; height: 0px; display: none;">
+			        <audio id="jp_audio_0" preload="metadata" src="jdres/BELL7.m4a"></audio>
+			    </div>
+			</div>		
+			
+			<div id="attachDiv" >
+				<div id="file-uploader-area" style="border:0px solid blue;height:50px;display:none;width:100%;max-height:150px;overflow-y:scroll;"></div>
+				<div id="file-uploader-button-area" style="cursor:pointer;margin-top:-1px;display:none;"></div>
+			</div>
+			
+			<div id="emotions" class="emotion_bg2" style="display:none">
+			</div>
+			
+			<div id="sendOpt" style="position: absolute; display: none; z-index:9; background-color: #ffffdd; width: 174px; height: 38px; right: 5px; bottom:76px; border: 1px #4ca0c2 solid;">
+				<div onclick="changeSendOpt('normal');" onmouseover="sendOptMouseOver(this);" onmouseout="sendOptMouseOut(this);" style="height: 50%">
+					<span id="opt1" style="width: 15px; display:inline-block; text-align: center;"><font color=blue>√</font></span>
+					<span>按Enter键发送消息</span>
+				</div>
+				<div onclick="changeSendOpt('ctrl');" onmouseover="sendOptMouseOver(this);" onmouseout="sendOptMouseOut(this);" style="height: 50%">
+					<span id="opt2" style="width: 15px; display:inline-block;"></span>
+					<span>按Ctrl+Enter键发送消息</span>
+				</div>
+			</div>
+			
+<script id="jdres_chat_content_template" type="text/html"  >
+
+		<template t-if="{{item.style == 'success'}}" >
+		    <div class="im-msg im-msg-success" logictype="serving" showtype="only">
+	        	<i class="im-icon-success"></i>
+	            <p>{{$ item.talk_html }}</p>
+	            <span class="im-msg-tl"></span>
+	            <span class="im-msg-tr"></span>
+	            <span class="im-msg-bl"></span>
+	            <span class="im-msg-br"></span>
+	    	</div>
+    	</template>
+        
+        <template t-if="{{item.style == 'talk_left'}}" >
+          <div class="im-item im-others">
+            <div class="im-message clearfix">
+                <div class="im-user-area">
+                    <a href="#" class="im-user-pic">
+                    	<img alt="{{$quote item.talker}}" src="jdres/img/user1.png" class="userPic">
+                        <img alt="" src="jdres/img/cap48.png" class="im-user-pic-cap">
+                    </a>
+                </div>
+                <div class="im-message-detail">
+                    <table class="im-message-table" border="0" cellpadding="0" cellspacing="0">
+                        <tbody>
+                            <tr>
+                                <td class="lt"></td>
+                                <td class="tt"></td>
+                                <td class="rt"></td>
+                            </tr>
+                            <tr>
+                                <td class="lm"><span></span>
+                                </td>
+                                <td class="mm">
+                                    <div class="im-message-title">
+                                        <p class="im-message-owner"> <span class="im-txt-bold">{{item.talker}}</span>
+                                        </p> <span class="im-send-time">{{item.talk_time}}</span>
+                                    </div>
+                                    <div class="im-message-content">
+                                        <p style=" color: rgb(0, 0, 0);">{{$ item.talk_html }}</p>
+                                    </div>
+                                </td>
+                                <td class="rm"><span></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="lb"></td>
+                                <td class="bm"></td>
+                                <td class="rb"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+          </div>
+        </template>
+        
+        <template t-if="{{item.style == 'talk_right'}}" >
+          <div class="im-item im-me">
+            <div class="im-message clearfix">
+                <div class="im-user-area">
+                    <a href="#" class="im-user-pic">
+                        <img alt="" src="jdres/img/user3.png" class="userPic">
+                        <img alt="" src="jdres/img/cap48.png" class="im-user-pic-cap">
+                    </a>
+                </div>
+                <div class="im-message-detail">
+                    <div class="msg-status" style="right: 157px; display: none;">
+                        <img src="jdres/img/waiting.gif">
+                    </div>
+                    <table class="im-message-table" border="0" cellpadding="0" cellspacing="0">
+                        <tbody>
+                            <tr>
+                                <td class="lt"></td>
+                                <td class="tt"></td>
+                                <td class="rt"></td>
+                            </tr>
+                            <tr>
+                                <td class="lm"></td>
+                                <td class="mm">
+                                    <div class="im-message-title">
+                                        <span id="{{item.msg_id}}" class="im-send-time">{{item.talk_time}}</span>
+                                        <p class="im-message-owner"> 
+                                        	<span class="im-txt-bold">我</span>
+                                        </p> 
+                                        
+                                    </div>
+                                    <div class="im-message-content">
+                                        <p style="color: rgb(51, 51, 51);">{{$ item.talk_html}}</p>
+                                    </div>
+                                </td>
+                                <td class="rm"><span></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="lb"></td>
+                                <td class="bm"></td>
+                                <td class="rb"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </template>
+        
+        <template  t-if="{{item.style == 'text'}}">
+        <div class="im-msg im-msg-notice">
+        	<i class="im-icon-notice"></i>
+            <p>{{$ item.talk_html}}</p>
+            <span class="im-msg-tl"></span>
+            <span class="im-msg-tr"></span>
+            <span class="im-msg-bl"></span>
+            <span class="im-msg-br"></span>
+        </div>
+        </template>
+            
+
+</script>		
+
+<script id="attachTemplate" type="text/html" >
+	<template  t-if="{{fileInfo.type.indexOf('image') >= 0}}">
+		<a href="{{fileInfo.url}}" target="_blank">
+			<img src="{{$quote fileInfo.url}}" class="appmsg_thumb {{fileInfo.bigCursor}}" style="width:{{fileInfo.showWidth}}px;height:{{fileInfo.showHeight}}px" >
+		</a>
+	</template>
+	<template t-if="{{fileInfo.type.indexOf('image') < 0 && fileInfo.mode != 'talkie' }}">
+		<span style="padding: 0px 0px 3px 0px;color:#99998A;" >
+			<img src="{{$quote getFileIconByFileName(fileInfo.name)}}" style="margin-bottom:-6px;" >
+			<a class="attach_link" href="{{$quote fileInfo.url}}" target="_blank" ' style="word-break: break-all;" > 
+				{{fileInfo.name}}
+			</a>( {{convertSize(fileInfo.size)}} ) 
+		</span>
+	</template>
+	<template t-if="{{fileInfo.mode == 'talkie'}}">
+		<div title="点击播放" name="talkie_div" status="stop" sound="{{ window.parent.serviceUrl + '/EFSPortal' + fileInfo.relative_url_mp3 }}" style="height:21px;margin-top:1px;cursor:pointer;">
+		    <div class="talkie sound_stop" direction="received" style="width: 27px; height: 21px; float: left; " ></div>
+		    <div name="sound_len" style="float:left;color:gray;">{{ TalkieTool.caculateSoundLength(fileInfo.length) }}</div>
+		    <div name="sound_text" style="float:left;color:gray;display:none;">{{ " " + fileInfo.body }}</div>
+		</div>	
+	</template>
+</script>
+
+
+		
+	</body>
+</html>

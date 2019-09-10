@@ -1,0 +1,17 @@
+
+.sound_stop {
+	background: url("img/sound_l.png") no-repeat;
+}
+
+.sound_playing_left {
+	background: url("img/you_sound_playing0ec160.gif") no-repeat;
+}
+
+.sound_playing_right {
+	background: url("img/me_sound_playing0ec160.gif") no-repeat;
+}
+
+.sound_playing_history {
+	background: url("img/me_sound_play_in_history.gif") no-repeat;
+}
+

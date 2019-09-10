@@ -1,0 +1,69 @@
+html,body{
+  width:100%;
+  height:100%;
+  padding:0;
+  margin: 0;
+}
+#app {
+  width:100%;
+  height:100%;
+  overflow: hidden;
+}
+ul,li{ padding:0;margin:0;list-style:none}
+.el-dialog__footer{
+  clear:both
+}
+.quill-editor .ql-snow{
+  width: calc(100% - 100px);
+  line-height: 25px;
+}
+.quill > .el-form-item__content{
+  width: 100%;
+  height: 100%;
+}
+.el-table::before {
+  height: 0px;
+}
+.seq_con .cell{
+  padding-left:0px;
+  padding-right:5px
+}
+.title-left .cell{
+  padding-right:0px;
+  padding-left:0px;
+}
+.quill-con .ql-container{
+  height: calc(100% - 42px)
+}
+.knowtree .ivu-tree-arrow {
+  display: none!important
+}
+.knowtree .ivu-tree-children li{
+  margin:0px!important;
+}
+.knowtree .ivu-tree-title{
+  font-size: 16px;
+  display: block!important;
+  height: 30px;
+  line-height: 30px;
+  padding-left: 20px!important
+}
+.el-popup-parent--hidden{
+  padding-right:0px!important
+}
+.addUser .ivu-input-wrapper{
+  width: 210px;
+}
+.p_a_r10{
+  position:absolute;
+  right: 10px;
+}
+.cur_p{
+  cursor: pointer;
+}
+/*打印相关*/
+.printCss,.printCss .mainBox,.printCss .content{
+  width:100% !important;
+  height:100% !important;
+  padding:8px;
+}

@@ -1,0 +1,700 @@
+<template>
+  <div class="con">
+    <div class="con_icon">
+       <Input  icon="ios-search" placeholder="搜索用户" v-model="searchValue" style="width: 200px;float:left;margin-left:200px"/>
+       <Button type="primary" icon="ios-search" style="float:left;margin-left:20px" @click="serach">搜索</Button>
+       <Button type="primary"  style="float:right" @click="addUser"><Icon type="md-add" />添加用户</Button>
+    </div>
+    <div class="con_table">
+      <!-- <Page :total="10" > -->
+      <Table style="width:100%;height:94%;border:0px"  border :columns="columns2" :data="testCol" placement="top" show-elevator class="userTable" no-filtered-data-text></Table>
+      <div style="margin: 10px;overflow: hidden">
+        <div style="float: right;">
+            <Page :total="reshuserLength" :current="1" @on-change="changePage" :page-size="pageSize"	show-elevator show-total></Page>
+        </div>
+      </div>
+    </div>
+    <!-- 用户信息修改 -->
+    <Modal
+        v-model="modal1"
+        title="用户信息修改"
+        @on-ok="ok"
+        @on-cancel="cancel" width="90%">
+        <Form  ref="changeForm" :model="changeForm" :rules="ruleValidates" :label-width="80" inline>
+          <FormItem label="昵称" prop="name">
+              <Input  placeholder="请输入昵称" v-model="changeForm.name" size="large"></Input>
+          </FormItem>
+          <FormItem label="联系方式" prop="telephone">
+              <Input  placeholder="请输入联系方式" v-model="changeForm.telephone" size="large"></Input>
+          </FormItem>
+          <FormItem label="地址" prop="address">
+              <Input  placeholder="请输入地址" v-model="changeForm.address" size="large"></Input>
+          </FormItem>
+          <FormItem label="部门" prop="departId">
+              <el-select v-model="changeForm.departId" placeholder="请选择部门" size="large" @change="getDepartmentId">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value" >
+                </el-option>
+              </el-select>
+          </FormItem>
+          <FormItem label="角色" prop="roleId">
+              <el-select v-model="changeForm.roleId" multiple  placeholder="请选择角色" size="large" @change="getDepartmentId">
+                <el-option
+                  v-for="item in roptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value" >
+                </el-option>
+              </el-select>
+          </FormItem>
+          <!-- <FormItem label="用户名" prop="username">
+              <Input   v-model="changeForm.username" size="large"></Input>
+          </FormItem> -->
+          <FormItem label="坐席电话" prop="phoneNum">
+              <Input  placeholder="请输入坐席电话" v-model="changeForm.phoneNum" size="large"></Input>
+          </FormItem>
+        </Form>
+    </Modal>
+     <!-- 添加用户 -->
+    <Modal
+        v-model="modal2"
+        title="添加用户信息"
+        @on-ok="addUserOk(addUserInfo)"
+        @on-cancel="addUserCancel" width="90%">
+        <Form  ref="addUserInfo" :model="addUserInfo" :rules="ruleValidate" :label-width="80" inline class="addUser">
+           <FormItem label="用户名" prop="username">
+              <Input  placeholder="请输入用户名" v-model="addUserInfo.username" size="large"></Input>
+          </FormItem>
+          <FormItem label="昵称" prop="name">
+              <Input  placeholder="请输入昵称" v-model="addUserInfo.name" size="large"></Input>
+          </FormItem>
+          <FormItem label="联系方式" prop="telephone">
+              <Input  placeholder="请输入联系方式" v-model="addUserInfo.telephone" size="large"></Input>
+          </FormItem>
+          
+          <FormItem label="部门" prop="adepartId">
+              <!-- <Input  placeholder="请输入部门名称" v-model="changeForm.departmentName"></Input> -->
+              <el-select v-model="addUserInfo.adepartId" placeholder="请选择部门" size="large" @change="getDepartmentId">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value" >
+                </el-option>
+                <!-- <Tree :data="departData"></Tree> -->
+              </el-select>
+          </FormItem> 
+          <FormItem label="地址" prop="address" style="width:580px;margin-right:0px">
+              <Input  placeholder="请输入地址" v-model="addUserInfo.address" size="large" style="width:102%"></Input>
+          </FormItem>
+          <FormItem label="角色" prop="aroleId" style="margin-left:25px;width:580px">
+              <!-- <Input  placeholder="请输入部门名称" v-model="changeForm.departmentName"></Input> -->
+              <el-select v-model="addUserInfo.aroleId" multiple placeholder="请选择角色"  @change="getRoleId" style="width:102%">
+                <el-option
+                  v-for="item in roptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value" >
+                </el-option>
+              </el-select>
+          </FormItem>
+          <FormItem label="坐席电话" prop="phoneNum">
+              <Input  placeholder="请输入坐席电话" v-model="addUserInfo.phoneNum" size="large"></Input>
+          </FormItem>
+        </Form>
+    </Modal>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'basicInfo',
+  data () {
+            return {
+                testCol:[], //表格每页最多几行数据
+                pageSize:7,
+                modal1: false,
+                modal2: false,
+                modal3: false,
+                searchValue:"",
+                deleteIndex:"",
+                // 部门id
+                departId:'',
+                depListIndex:'',
+                everyDepartmentId:"",
+                changeForm:{
+                  name: '',
+                  username: '',
+                  address:'',
+                  telephone:'',
+                  departId:"",
+                  roleId:"",
+                  phoneNum:""
+                  // departmentName:'',
+                },
+                addUserInfo:{
+                  name: '',
+                  username: '',
+                  address:'',
+                  telephone:'',
+                  departmentName:'',
+                  adepartId:"",
+                  aroleId:[],
+                  phoneNum:""
+                },
+                // 总数
+                reshuserLength:0,
+                options: [],
+                  value: '',
+                  // 角色数据
+                roptions:[],
+                departData:[
+                  {title:"1",expand:true,children:[{title:"1-1",expand:true}]}
+                ],
+                ruleValidate: {
+                    username: [
+                        { required: true, message: '请输入用户名', trigger: 'blur' }
+                    ],
+                    name: [
+                        { required: true, message: '昵称不能为空', trigger: 'blur' }
+                    ],
+                    telephone: [
+                        { required: true, message: '联系方式不能为空', trigger: 'blur' }
+                    ],
+                    // adepartId:[
+                    //   { required: true, message: '请选择部门', trigger: 'change' }
+                    // ],
+                    address: [
+                        { required: true, message: '地址不能为空', trigger: 'blur' }
+                    ],
+                    // aroleId:[
+                    //   { required: true, message: '请选择角色', trigger: 'change' }
+                    // ],
+                    phoneNum: [
+                        { required: true, message: '坐席电话不能为空', trigger: 'blur' }
+                    ],
+                    // departmentName: [
+                    //    { required: true, message: '部门不能为空', trigger: 'blur' }
+                    // ],
+                    // username: [
+                    //     { required: true, message: '请输入用户名', trigger: 'blur' }
+                    // ]
+                },
+                ruleValidates: {
+                    name: [
+                        {required: true, message: '昵称不能为空', trigger: 'blur' }
+                    ],
+                    address: [
+                        {required: true,message: '地址不能为空', trigger: 'blur' }
+                    ],
+                    telephone: [
+                        {required: true,message: '联系方式不能为空', trigger: 'blur' }
+                    ],
+                    // departmentName: [
+                    //    {required: true,message: '部门不能为空', trigger: 'blur' }
+                    // ],
+                    username: [
+                        {required: true,message: '请输入用户名', trigger: 'blur' }
+                    ],
+                    phoneNum: [
+                        {required: true,message: '请输入坐席电话', trigger: 'blur' }
+                    ]
+                },
+                columns2: [
+                    {
+                        title: '序号',
+                        key: 'seq',
+                        width:80
+                        // width: 100,
+                        // fixed: 'left'
+                    },
+                    {
+                        title: '昵称',
+                        key: 'name',
+                        // width: 100,
+                        // fixed: 'left'
+                    },
+                    {
+                        title: '部门',
+                        key: 'departmentName',
+                        // width: 100
+                    },
+                    {
+                        title:"角色",
+                        key:"role"
+                    },
+                    {
+                        title: '用户地址',
+                        key: 'address',
+                        // width: 100
+                    },
+                    {
+                        title: '联系方式',
+                        key: 'telephone',
+                        // width: 100
+                    },
+                    // {
+                    //     title: '用户状态',
+                    //     key: 'enabled',
+                    //     // width: 120
+                    // },
+                     {
+                        title: '用户名',
+                        key: 'username',
+                        // width: 100
+                    },
+                    {
+                        title: '坐席电话',
+                        key: 'phoneNum',
+                        // width: 100
+                    },
+                    {
+                        title: '操作',
+                        key: 'action',
+                        // width: 200,
+                        render: (h, params) => {
+                            return h('div', [
+                                h('Button', {
+                                    props: {
+                                        type: 'primary',
+                                        size: 'small'
+                                    },
+                                    style:{
+                                      marginRight:'3px'
+                                    },
+                                    on:{
+                                      click: () => {
+                                            this.changeUserInfo(params.row,params.index)
+                                        }
+                                    }
+                                }, '编辑'),
+                                h('Button', {
+                                    style:{
+                                        // height:'20px'
+                                        marginRight:'3px'
+                                    },
+                                    props: {
+                                        type: 'error',
+                                        size: 'small',
+                                    },
+                                    on:{
+                                      click: () =>{
+                                        this.deletaUserInfo(params.index,params.row)
+                                      }
+                                    }
+                                }, '删除')
+                            ]);
+                        }
+                    }
+                ],
+                data3: []
+            }
+        },
+  computed: {
+    // reshuserLength () {
+    //   return this.data3.length
+    // },
+    everyDepartmentId01 () {
+      return this.$store.state.departmentId
+    },
+    departmentList () {
+      return this.$store.state.departList
+    }
+  },
+  methods: {
+    changePage (index) {
+     let start_in = (index-1)*this.pageSize;
+     let end_in = index*this.pageSize;
+     this.testCol = this.data3.slice(start_in,end_in);
+     this.deleteIndex = index;
+    },
+    //用户信息编辑
+    changeUserInfo (row,index) {
+     this.modal1 = true;
+     this.depListIndex = index;
+     let inde = this.options.findIndex(el=>el.label == row.departmentName);
+     let depid = this.options[inde].value;
+     let roles = row.role.split(",");
+     let rolesId = [];
+     roles.forEach(el=>{
+       let inde = this.roptions.findIndex(em=>em.label == el);
+       if(inde != '-1'){
+         let roleid = this.roptions[inde].value;
+         rolesId.push(roleid)
+       }
+     })
+     this.departId = depid;
+     let {name,username,address,telephone,phoneNum} = row ;
+        this.changeForm.name = name;
+        // this.changeForm.username = username;
+        this.changeForm.address = address;
+        this.changeForm.telephone = telephone;
+        this.changeForm.departId = depid;
+        this.changeForm.roleId = rolesId;
+        this.changeForm.phoneNum = phoneNum;
+    },
+    // 删除用户操作
+    deletaUserInfo (index,data) {
+      let that = this;
+      let userId = data.id
+      this.$Modal.confirm({
+        title: '提示',
+        content:`你确定要删除${this.testCol[index].name}基本资料信息？`,
+        okText: '确定',
+        cancelText: '取消',
+        onOk:function(){
+          this.axios({
+            method:'post',
+            url:"/user/deleteUser",
+            params:{
+              id:userId,
+            }
+          }).then(res=>{
+            let statu = res.data.status;
+            if(statu === "success"){
+                that.testCol.splice(index,1);
+                let start = (that.deleteIndex-1)*that.pageSize+index;
+                that.data3.splice(start,1);
+                this.$Message.success('删除用户成功');
+            }else{
+              this.$Message.success('删除用户失败');
+            }
+          })
+        
+        }
+      })
+    },
+    // 确定修改用户信息
+    ok () {
+      let that = this; 
+      // this.$Message.info('编辑信息已保存');
+      let index = that.depListIndex;
+      let delpartId = that.departId;
+      let rids = ''
+      this.changeForm.roleId.forEach((i,index)=>{
+        if(index==0){
+          rids = rids + i;
+        }else{
+          rids = rids + ',' + i
+        }
+      })
+      this.$refs['changeForm'].validate((valid) => {
+        if (valid) {
+            let {name,username,address,telephone,phoneNum} = that.changeForm;
+            this.axios({
+              method:"post",
+              url:'/user/updateUser',
+              params:{
+                rids:rids,
+                id:that.testCol[index].id,
+                name:name,
+                // username:username,
+                address:address,
+                telephone:telephone,
+                department_id:delpartId,
+                phoneNum:phoneNum
+              }
+            }).then(res=>{
+                let status = res.data.status;
+                if(status === 'success'){
+                    let data = res.data.date;
+                    let {name,username,address,telephone,department,phoneNum} = data;
+                    that.testCol[index].name = name;
+                    that.testCol[index].username = username;
+                    that.testCol[index].address = address;
+                    that.testCol[index].telephone = telephone;
+                    that.testCol[index].departmentName = department.name;
+                    that.testCol[index].phoneNum = phoneNum;
+                    this.$Message.success('保存成功');
+                } else {
+                  this.$Message.error('信息保存失败');
+                }
+            })
+        }
+        else{
+            // that.modal1 = true;
+            this.$Message.error('信息修改失败');
+        }
+      })
+    },
+    cancel () {
+      this.$Message.info('取消编辑');
+    },
+    addUser () {
+     this.modal2 = true;
+    },
+    //确认添加用户信息
+    addUserOk (data) {
+    let that = this;
+    this.$refs['addUserInfo'].validate((valida)=>{
+      if(valida){
+        let {name,username,address,telephone,adepartId,aroleId,phoneNum} = data;
+        let roleStrId = aroleId.join(",");
+        // console.log(roleStrId);
+        // let id = that.departId;
+        let seq = that.data3.length+1;
+        this.axios({
+          method:"post",
+          url:"/user/addUser",
+          params:{
+            name:name,
+            username:username,
+            address:address,
+            telephone:telephone,
+            department_id:adepartId,
+            rids:roleStrId,
+            phoneNum:phoneNum
+            }
+          }).then(res=>{
+            let status = res.data.status;
+          if(status == 'success'){
+          that.addUserInfo.name = '';
+          that.addUserInfo.username = '';
+          that.addUserInfo.address = '';
+          that.addUserInfo.telephone = '';
+          that.addUserInfo.adepartId = '';
+          that.addUserInfo.aroleId = [];
+           that.addUserInfo.phoneNum = '';
+        
+            let data = res.data.date;
+            // console.log(data)
+            let {name,address,telephone,username,department,id} = data;
+            this.$nextTick(function(){
+            that.data3.push({seq:seq,id:id,name:name,address:address,telephone:telephone,username:username,departmentName:department.name});
+            this.$Message.info('添加用户成功');
+            })
+          }else{
+          this.$Message.info('添加用户失败')
+          }
+        })
+      }else{
+        this.$Message.warning('添加用户失败')
+      }
+    })
+    },
+    addUserCancel () {
+      this.$Message.info('取消添加')
+    },
+    //初始化用户信息列表
+    initUserTable () {
+    let that = this
+    this.axios({
+      method:'get',
+      url:"/user/allUsers"
+    }).then((res)=>{
+      let data = res.data;
+      data.forEach(function(item,index){
+        let {name,address,telephone,username,id,department_id,department,enabled,phoneNum} = item
+        let roles = [];
+         item.roles.forEach(el=>{
+           roles.push(el.nameZh)
+         })
+        let strRoles = roles.join(",");
+        // if(enabled == '1'){ 
+          that.data3.push({seq:index+1,id:id,name:name,address:address,telephone:telephone,username:username,departmentName:department.name,phoneNum:phoneNum,role:strRoles})        
+        // }
+        // that.data3.push({seq:index+1,id:id,name:name,address:address,phone:phone,username:username,departmentName:department.name})        
+      })
+        
+      this.testCol = this.data3.slice(0,7);
+      this.reshuserLength = this.data3.length;
+    })
+    },
+    //查找用户
+    serach ()  {
+      let name = this.searchValue;
+      let that = this;
+      // let userId = "";
+      // for(let i=0;i<this.data3.length;i++){
+      //   let dname = this.data3[i].name;
+      //   if(name == dname){
+      //     userId = this.data3[i].id
+      //   }
+      // }
+      this.axios({
+        method:'post',
+        url:"/user/getUserByUsername",
+        params:{
+          name:name
+        }  
+      }).then(res=>{
+        let status = res.status;
+        if(status == '200'){
+        let data= res.data;
+        let serchDep = []
+        data.forEach(item=>{
+          let {name,address,telephone,username,id,department,phoneNum}= item;
+          let roles = [];
+          item.roles.forEach(el=>{
+            roles.push(el.nameZh)
+          })
+          let strRoles = roles.join(",");
+          serchDep.push({seq:1,id:id,name:name,address:address,telephone:telephone,username:username,departmentName:department.name,role:strRoles,phoneNum:phoneNum})
+        })
+        that.testCol = []; 
+        that.testCol = serchDep
+        }else{
+          this.$Message.info("该用户不存在")
+        }
+      })
+    },
+    // 用户密码修改
+    changePwd (data,index) {
+     let that = this;
+     that.changepwd.name = data.name;
+     that.modal3 = true;
+    },
+    // 用户密码确认修改
+    surechangePwd (vali,data) {
+      let that = this;
+      let name = data.name;
+      let oldpwd = data.oldpwd;
+      let newpwd = data.newpwd;
+      this.$refs[vali].validate((valid) => {
+          if (valid) {
+              this.postRequest("user/updatePassword",{
+                username:name,
+                oldpassword:oldpwd,
+                newpassword:newpwd,
+              }).then(res=>{
+                that.changepwd.name = '';
+                that.changepwd.oldpwd = '';
+                that.changepwd.newpwd = '';
+                that.changepwd.surepwd = '';
+                let status = res.data.status;
+                if(status === 'success'){
+                  this.$Message.info("密码修改成功");
+                }else{
+                  this.$Message.info("密码修改失败")
+                }
+              }).catch(error=>{
+                this.$Message.info(error)
+              })
+          } else {
+              this.$Message.error('密码修改失败');
+          }
+      })
+    },
+    getDepartmentId () {
+    },
+    //根据部门id查询用户信息
+    departmentUser (id)  {
+      let that = this;
+      this.axios({
+        method:'post',
+        url:"/user/findUsersByDepartmentId",
+        params:{
+          department_id:id
+        }
+      }).then(res=>{
+        let data= res.data;
+        let serchDep = []
+        data.forEach((item,index)=>{
+          let {name,address,telephone,username,id,department,phoneNum}= item;
+          let roles = [];
+          item.roles.forEach(el=>{
+            roles.push(el.nameZh)
+          })
+          let strRoles = roles.join(",");
+          // if(enabled == '1'){ 
+            serchDep.push({seq:index+1,id:id,name:name,address:address,telephone:telephone,username:username,departmentName:department.name,role:strRoles,phoneNum:phoneNum})        
+          // }
+          // serchDep.push({seq:index+1,id:id,name:name,address:address,phone:phone,username:username,departmentName:department.name})
+        })
+        that.testCol = []; 
+        that.data3 = serchDep;
+        that.testCol = that.data3.slice(0,7);
+        that.reshuserLength = that.data3.length;
+        // that.testCol = serchDep
+      })
+    },
+    initRoleList () {
+      let that = this;
+      this.axios({
+        method:'get',
+        url:"/role/allRoles"
+      }).then(res=>{
+        let data = res.data;
+        data.forEach(el=>{
+          that.roptions.push({label:el.nameZh,value:el.id})
+        })
+      })
+    },
+    getRoleId (id) {
+    }
+  },
+  mounted () {
+    this.$nextTick(function(){
+    let that = this;
+    that.initUserTable();
+    that.initRoleList();
+    // let deplist = []
+    //     deplist = this.$store.state.departList;
+    //     deplist.forEach(item=>{
+    //     that.options.push({value:item.id,label:item.label})
+    //   })
+    })
+  },
+  watch:{
+    everyDepartmentId01(newValue,oldValue){
+      this.departmentUser(newValue)
+    },
+    departmentList:{
+      handler(newValue,oldValue){
+        this.options = [];
+        let deplist = [];
+                deplist = newValue;
+                deplist.forEach(item=>{
+                this.options.push({value:item.id,label:item.label})
+            })
+      },
+      immediate: true
+    },
+  },
+}
+</script>
+
+<style scoped>
+.con{
+  width: 100%;
+  height: 100%;
+  padding:10px;
+}
+.con_emp{
+  font-size:20px;
+  color:#fff;
+  text-align: left;
+  font-weight: normal
+}
+.con_icon{
+ width: 100%;
+ height: 40px;
+ line-height: 40px;
+ /* background:#000 */
+}
+.con_table{
+  width:100%;
+  height: 400px;
+  background: transparent
+  /* background: #0f0 */
+}
+.nameF{
+  font-size: 16px
+}
+.wrapC{
+  height:40px;
+  float:left;
+  margin-left: 20px;
+}
+.fo{
+  width: 100%;
+}
+.fo_input{
+  width: 70%;
+}
+
+</style>
+

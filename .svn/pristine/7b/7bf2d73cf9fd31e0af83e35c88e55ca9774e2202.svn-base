@@ -1,0 +1,208 @@
+
+
+.appmsg {
+  width: 375px;
+  font-family: "Helvetica Neue","Hiragino Sans GB","Microsoft YaHei","\9ED1\4F53",Arial,sans-serif;
+  line-height: 1.6;
+  font-size: 14px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid #e7e7eb;
+  background-color: #fff;
+  color: #666;
+}
+
+.first_appmsg_item {
+  position: relative;
+}
+
+.cover_appmsg_item {
+  position: relative;
+  margin: 14px 14px 14px;
+}
+
+.first_appmsg_item .cover_appmsg_item {
+  margin: 0;
+}
+
+h4 {
+  display: block;
+  -webkit-margin-before: 0.33em;
+  -webkit-margin-after: 0.33em;
+  -webkit-margin-start: 0px;
+  -webkit-margin-end: 0px;
+  font-weight: bold;
+}
+
+
+.appmsg_title {
+  font-weight: 400;
+  font-style: normal;
+  font-size: 16px;
+  padding-top: 0px;
+  line-height: 28px;
+  max-height: 98px;
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.appmsg_title a {
+  line-height: 1.6;
+  font-size: 14px;	
+  text-indent: 0px; 
+  font-weight: bold;
+  font-family: "Helvetica Neue","Hiragino Sans GB","Microsoft YaHei","\9ED1\4F53",Arial,sans-serif; 
+}
+
+.multi .appmsg_title {
+  font-size: 14px;
+  padding-top: 0;
+}
+
+.cover_appmsg_item .appmsg_title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.6)!important;
+  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#99000000',endcolorstr = '#99000000');
+}
+
+.first_appmsg_item .appmsg_title {
+  color: #fff;
+  padding: 0 8px;
+}
+
+input, textarea, button, a {
+  outline: 0;
+}
+
+ab {
+  color: #459ae9;
+  text-decoration: none;
+}
+
+.appmsg_title a {
+  display: block;
+  color: #222;
+}
+
+.cover_appmsg_item .appmsg_title a {
+  padding: 0 8px;
+  color: #fff;
+}
+
+.cover_appmsg_item .appmsg_title a {
+  padding: 0 8px;
+  color: #fff;
+}
+
+.appmsg_desc {
+  	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.appmsg_thumb_wrp {
+  overflow: hidden;
+}
+
+.appmsg_thumb {
+  width: 100%;
+}
+
+.editing .has_thumb .appmsg_thumb {
+  display: block;
+}
+
+.appmsg_item {
+  position: relative;
+  padding: 12px 14px;
+  border-top: 1px solid #e7e7eb;
+  min-height: 78px;
+}
+
+.appmsg_item .appmsg_thumb {
+  float: right;
+  width: 78px;
+  height: 78px;
+  margin-left: 14px;
+}
+
+.appmsg_item .appmsg_thumb_right {
+  float: left;
+  width: 78px;
+  height: 78px;
+  margin-right: 14px;
+}
+
+.editing .has_thumb .appmsg_thumb {
+  display: block;
+}
+
+.appmsg_item .appmsg_title {
+  line-height: 24px;
+  max-height: 48px;
+  overflow: hidden;
+}
+
+.multi .appmsg_title {
+  font-size: 14px;
+  padding-top: 0;
+}
+
+.appmsg_item .appmsg_title {
+  line-height: 24px;
+  max-height: 92px;
+}
+
+.multi .appmsg_title {
+  font-size: 14px;
+  padding-top: 0;
+}
+
+a {
+  color: #459ae9;
+  text-decoration: none;
+}
+
+.appmsg_title a {
+  display: block;
+  color: #222;
+}
+
+.appmsg_content {
+  padding: 0 14px;
+  position: relative;
+}
+
+.appmsg_info {
+  font-size: 13px;
+  line-height: 20px;
+  padding-bottom: 10px;
+}
+
+.appmsg_date {
+  font-weight: 400;
+  font-style: normal;
+}
+
+input, textarea, button, a {
+  outline: 0;
+}
+
+.shopmsg_title {
+  font-size: 13px;
+}
+
+.price_title {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.price_title a {
+  display: block;
+  color: red;
+}
+

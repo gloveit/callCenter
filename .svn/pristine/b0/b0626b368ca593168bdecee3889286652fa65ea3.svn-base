@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>太原呼叫中心</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/3.8.5/echarts.min.js"></script>
+    <!--网梭相关-->
+    <script src="static/agentbar/js/jquery.1.7.2.js"></script>
+    <script src="static/agentbar/js/json2.js"></script>
+    <script src="static/agentbar/js/jquery.query-2.1.7.js"></script>
+    <script src="static/agentbar/js/ichart.1.2.1.min.js"></script>
+    <script src="static/agentbar/js/base64.js"></script>
+    <script src="static/agentbar/agentbar.min.js"></script>
+    <script src="static/agentbar/jssip-3.0.0.js" ></script>
+    <script src="static/agentbar/MultiStreamsMixer.js"></script>
+    <script src="static/agentbar/QPhoneH5-1.0.1.50.js" ></script>
+    <script src="static/agentbar/voiceTool.js"></script>
+    <script src="static/agentbar/qphoneTool.js"></script>
+    <script src="static/agentbar/crossBrowserSAM.js"></script>
+    <script src="static/agentbar/layer.js"></script>
+
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>

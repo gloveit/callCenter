@@ -1,0 +1,20 @@
+<div>
+<OBJECT style="height:0px;" ID="qzPhone_WaitAudioObject" CLASSID="CLSID:6BF52A52-394A-11d3-B153-00C04F79FAA6">
+<param NAME="AutoStart" VALUE="False"/>
+ <param NAME="URL" VALUE="wait.wav" />
+</OBJECT>
+
+</div>
+	
+	<script language="JavaScript" for="qzPhone_WaitAudioObject" type="text/javascript" event="PlayStateChange(newstate)">   
+		
+  if (newstate==1)   
+  {  
+    setTimeout(function() {
+    	qzPhone_WaitAudioObject.controls.play();
+    }, 1);
+  }   
+  </script> 
+  <script>
+  	qzPhone_WaitAudioObject.controls.play();
+  	</script>

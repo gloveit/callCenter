@@ -1,0 +1,669 @@
+<template>
+    <div class="all">
+      <div class="timeBox">
+        <div class="title">持续时间：</div>
+        <div class="ka">
+          <span class="i">{{time.shi}}</span>
+          <span class="m">:</span>
+          <span class="i">{{time.fen}}</span>
+          <span class="m">:</span>
+          <span class="i">{{time.miao}}</span>
+        </div>
+      </div>
+      <div class="annius" id="newPhoneBar">
+        <ul>
+          <li @click="chatOn">
+            <img src="@/assets/imgs/yiqiyong.png" v-if="imgShow.chat" alt="">
+            <img src="@/assets/imgs/weiqiyong.png" v-else alt="">
+            <div class="zi">{{agent.weChat}}</div>
+          </li>
+          <li @click="agentLogin">
+            <!--<img src="@/assets/imgs/nojiuxu.png" v-if="agent.status==''">-->
+            <img src="@/assets/imgs/jiuxu.png">
+            <div class="zi">{{agent.status}}</div>
+          </li>
+          <li @click="setBusy">
+            <img src="@/assets/imgs/zhixian.png" alt="" v-if="clickSwitch.call">
+            <img src="@/assets/imgs/nozhixian.png" alt="" v-else>
+            <div class="zi">{{agent.busy}}</div>
+          </li>
+          <li @click="complete">
+            <img src="@/assets/imgs/wancheng.png" alt="" v-if="clickSwitch.complete">
+            <img src="@/assets/imgs/nowancheng.png" alt="" v-else>
+            <div class="zi">完成</div>
+          </li>
+          <li @click="hangupClick">
+            <img src="@/assets/imgs/guaduan.png" alt="" v-if="clickSwitch.hangup">
+            <img src="@/assets/imgs/noguaduan.png" alt="" v-else>
+            <div class="zi">挂断</div>
+          </li>
+          <li @click="holdClick">
+            <img src="@/assets/imgs/shihui.png" alt="" v-if="clickSwitch.hold">
+            <img src="@/assets/imgs/noshihui.png" alt="" v-else>
+            <div class="zi">{{agent.hold}}</div>
+          </li>
+          <li clickid="imgTransfer" id="imgTransfer" @click="transferToAgent">
+            <img src="@/assets/imgs/zhuanzuoxi.png" alt="" v-if="clickSwitch.zhuan">
+            <img src="@/assets/imgs/nozhuanzuoxi.png" alt="" v-else>
+            <div class="zi">转接坐席</div>
+          </li>
+          <li clickid="imgTransfer" id="imgOutbound" @click="outbound">
+            <img src="@/assets/imgs/hudianhua.png" alt="" v-if="clickSwitch.call">
+            <img src="@/assets/imgs/nohudianhua.png" alt="" v-else>
+            <div class="zi">呼叫电话</div>
+          </li>
+          <li clickid="imgTransfer" id="imgCallAgent" @click="callAgent">
+            <img src="@/assets/imgs/huzuoxi.png" alt="" v-if="clickSwitch.call">
+            <img src="@/assets/imgs/nohuzuoxi.png" alt="" v-else>
+            <div class="zi">呼叫坐席</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/daifuwu0.png" v-if="agent.wait==0">
+            <img src="@/assets/imgs/daifuwu1.png" v-else>
+            <div class="zi">待服务:{{agent.wait}}</div>
+          </li>
+          <li style="margin-left:16px;" @click="addGd('/workOrder','新建工单')">
+            <img src="@/assets/imgs/addForm.png" alt="">
+            <div class="zi">新建工单</div>
+          </li>
+        </ul>
+      </div>
+      <div class="mine">
+        <div class="name">{{nick}}</div>
+        <img src="@/assets/imgs/logout.png" @click="logout" class="logout">
+      </div>
+      <div id="uiComponent">
+
+      </div>
+    </div>
+</template>
+
+<script>
+  import simpleBar from "../../static/agentbar/simpleBarUI.js"
+    export default {
+        name: "status-bar",
+        data(){
+          return{
+            time:{
+              shi:"--",fen:'--',miao:'--'
+            },
+            agent:{
+              weChat:"未启用",
+              status:"未登录",
+              busy:"置忙",
+              hold:"保持",
+              wait:0
+            },
+            imgShow:{
+              chat:false,
+              jiuxu:false,
+            },
+            clickSwitch:{
+              complete:false,
+              hangup:false,
+              hold:false,
+              zhuan:false,
+              call:false,
+            },
+            timeInterval:null,
+            accessInfo:{
+              realm: "jinka",
+              agent_id : "jinka.8000",
+              nick:"小美",
+            },
+          }
+        },
+        computed:{
+          weChatOn(){
+            return this.$store.state.weChatOn;
+          },
+          nick(){
+            if(this.$store.state.agentInfo.trueName){
+              return this.$store.state.agentInfo.trueName;
+            }else{
+              if(window.getSession('agentInfo') && window.isJson(window.getSession('agentInfo'))){
+                return JSON.parse(window.getSession('agentInfo')).trueName;
+              }else{
+                return "金卡管理员";
+              }
+            }
+          },
+        },
+        methods:{
+          logout(){
+            this.$confirm('是否退出登录?', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+              lockScroll:false,
+            }).then(() => {
+              this.logoutOk();
+            }).catch(() => {
+              console.log("退出登录操作已取消")
+            });
+
+          },
+          logoutOk(){
+            this.$root.clearUser();
+            this.axios({
+              method:"post",
+              url:"/logout",
+              data:{},
+              transformRequest: [function (data) {
+                let ret = ''
+                for (let it in data) {
+                  ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                }
+                return ret
+              }],
+              headers: {
+                'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
+              }
+            }).then((res)=> {
+              if(res.data.status == "success"){
+                this.$router.push({path:"/login"});
+              }else{
+                this.$router.push({path:"/login"});
+                this.$message.error("已退出登录,但响应错误!");
+              }
+            }).catch((res) => {
+              this.$router.push({path:"/login"});
+              this.$message.error("已退出登录,但退出请求出错!");
+            })
+          },
+          addGd(p1,t1){
+            //打开新建工单页
+            this.$store.state.goRoute(p1,t1);
+          },
+          timeF(t){
+            let arr = t.split(":");
+            this.time = {
+              shi:arr[0],fen:arr[1],miao:arr[2]
+            }
+          },
+          phoneOn(){
+            console.log("接通")
+            this.clickSwitch = {
+              ...this.clickSwitch,
+              complete:false,
+              hangup:true,
+              hold:true,
+              zhuan:true,
+            }
+            this.addGd("/workOrder1","电话工单");
+            clearInterval(this.timeInterval)
+            this.timeInterval = setInterval(() => {
+              let time = $("#statusDuration").text();
+              this.timeF(SAM.getDisplayStatusDuration());
+            },1000)
+          },
+          onService(e) {
+            let that = this;
+            console.log("sssss",e.eventType)
+            //登录成功
+            if(e.eventType == "onLoginSuccess"){
+              console.log("登录成功")
+              this.agent.status = "就绪";
+              SAM.complete();
+              SAM.ready();
+              SAM.startQueueMonitor();
+              this.clickSwitch.call = true;
+            }
+            //登出
+            else if(e.eventType == "onLogout"){
+              this.agent.status = "未登录";
+              SAM.stopQueueMonitor();
+              this.clickSwitch.call = false;
+              //关闭微信聊天
+              SIM.stop();
+              this.agent.weChat = "未启用";
+              this.$store.state.weChatOn = false;
+              this.imgShow.chat = false;
+            }
+            //坐席状态改变
+            else if(e.eventType == "onAgentStatusChange"){
+              console.log("zhuangtai",SAM.getAgentStatus().status);
+              //正在通话中
+              if(SAM.isAgentInService(this.accessInfo.agent_id)){
+                this.agent.status = "通话中";
+                this.phoneOn();
+                if(QPhoneTool.qPhone && QPhoneTool.qPhone.currentCall){
+                  QPhoneTool.acceptCall();
+                }
+              }
+              if(SAM.getAgentStatus().status == "ready"){
+                this.agent.busy = "置忙";
+                this.agent.status = "就绪";
+              }
+              if(SAM.getAgentStatus().status == "not_ready"){
+                this.agent.busy = "置闲";
+                this.agent.status = "忙";
+              }
+            }
+            else if(e.eventType == "onAgentPartnerStatusChange"){
+              console.log("ssss_partner",SAM.getQueueList().length)
+              this.agent.wait = SAM.getQueueList().length;
+            }
+            else if(e.eventType == "request_changed"){
+              console.log("ssss1",SAM.getQueueList().length)
+              this.agent.wait = SAM.getQueueList().length;
+            }
+            else if(e.eventType == "request_cancelled"){
+              console.log("ssss1_cancelled",SAM.getQueueList().length)
+              this.agent.wait = SAM.getQueueList().length;
+            }
+            else if(e.eventType == "request_satisified"){
+              console.log("ssss1_满意",SAM.getQueueList().length)
+              this.agent.wait = SAM.getQueueList().length;
+            }
+            //电话接通
+            else if (e.eventType == SimpleAgentMgr.EVENT_SERVICE_PICKUP) {
+              this.phoneOn();
+            }
+            //振铃
+            else if (e.eventType == SimpleAgentMgr.EVENT_SERVICE_START) {
+              console.log("zhenling",SimpleAgentMgr.getACDEvent().acdCall);
+              let phoneNumber = "";
+              if (SimpleAgentMgr.getACDEvent().acdCall.isOutBound) {
+                // 取 callee
+                phoneNumber = SimpleAgentMgr.getACDEvent().acdCall.callee;
+                console.log("正在呼出电话：" + phoneNumber);
+                this.$store.state.phone = {
+                  title:"正在呼出",num:phoneNumber
+                }
+              }else{
+                phoneNumber = SimpleAgentMgr.getACDEvent().acdCall.caller;
+                if (SAM.getACDEvent().acdCall.isVideo ) {
+                  console.log("视频呼入来自：" + phoneNumber);
+                  this.$store.state.phone = {
+                    title:"视频呼入",num:phoneNumber
+                  }
+                }
+                else {
+                  console.log("电话呼入来自：" + phoneNumber);
+                  this.axios({
+                    method:"get",
+                    url:"/dc/getUserInfo",
+                    params:{
+                      YHLY:1,
+                      TJLX:4,
+                      TJ:phoneNumber
+                    }
+                  }).then((res)=>{
+                    this.$store.state.phone = {
+                      title:"正在呼入",num:phoneNumber
+                    }
+                    //查询用户姓名
+                    if(res.data.YHMC){
+                      this.$store.state.phone.title = res.data.YHMC
+                    }else{
+                      //出错
+                    }
+                    this.$store.state.userInter.TJ = phoneNumber;
+                    this.$store.state.callShow = true;
+                  }).catch(error=>{
+                    this.$message.error("查询电话来源信息失败！")
+                  })
+                }
+              }
+            }
+            //微信收到消息
+            else if (e.eventType == "recv_msg") {
+              console.log("收到微信消息",e.msg.session.id);
+              //互联网聊天红点提醒
+              if(this.$route.path != "/weChat"){
+                this.$store.commit("cchatAlarm",true);
+              }
+              let chatId = $("#weChat01").contents().find("#chatButtons>.layui-btn-normal").attr("data-node-id");
+              if(chatId && Object.getOwnPropertyNames(this.$store.state.usersInfo).length == 1){
+                let a = {};
+                a[chatId] = {
+                  id:chatId,
+                  newGd:{
+                    DZ:"",
+                    YHID:"",
+                    YHMC:"",
+                    JSBM:"",
+                    // GDH:"",
+                    SJH:"",
+                    JHRQ:"",
+                    GDNR:"",
+                  },
+                }
+                this.$store.commit("cusersInfo",a)
+                this.$store.state.chatIdAc = chatId;
+              }
+            }
+            //完成
+            else if (e.eventType == "service_complete" ) {
+              console.log("wancheng")
+              this.agent.status = "就绪";
+            }
+            //挂断
+            else if(e.eventType=="service_end"){
+              console.log("fuwu end");
+              this.clickSwitch = {
+                ...this.clickSwitch,
+                hangup:false,
+                complete:true,
+                hold:false,
+                zhuan:false,
+              }
+              this.$message.info("已挂断");
+              this.agent.status = "事后处理";
+              this.$store.state.callShow = false;
+              clearInterval(that.timeInterval);
+              this.time = {
+                shi:"--",fen:'--',miao:'--'
+              }
+            }
+          },
+          loadQPhoneComponent(){
+            try {
+              var options = {
+                "webrtcFirst": "true",
+                "baseUrl": location.origin + "/onesoul/"
+              }
+              QPhoneTool.init(options);
+              /**
+               * NOTE:若能 init 完成而没有异常，则QPhone 组件加载成功了。
+               */
+
+              QPhoneTool.OnRegisterSuccessful = function() {
+                console.log("qphone#######已连接");
+              };
+
+              QPhoneTool.OnRegisterFailed = function() {
+                //console.log("qphone#######注册失败");
+              };
+              QPhoneTool.OnUnregistered = function() {
+                //console.log("qphone#######已断开");
+              };
+
+              // 呼叫事件的接管
+              QPhoneTool.OnCallIncoming = function(currentCall) {
+                //qphonePickup();
+              };
+
+              QPhoneTool.OnCallTerminated = function(callHangUpObject) {
+                $("#calltip").hide(500);
+                //console.log("qphone#######呼叫已终止");
+              };
+
+              QPhoneTool.OnCallConnected = function(callStartedObject) {
+                //console.log("qphone#######正在通话");
+              };
+
+              QPhoneTool.OnException = function(e) {
+                //console.log("qphone#######正在通话" + "QPhone出错:" + e.message);
+              };
+
+            }
+            catch (e) {
+              console.log("qphone exception:" + e.message);
+            }
+          },
+          chatOn(){
+            if(this.agent.status == "未登录"){
+              lay.msg("尚未登录坐席")
+            }else{
+              if(this.agent.weChat == "未启用"){
+                SIM.start();
+                this.agent.weChat = "已开启";
+                this.$store.state.weChatOn = true;
+                this.imgShow.chat = true;
+                var options = {
+                  nick: this.accessInfo.nick,  //显示名称，必填
+                  ability: 3,    // 通道能力
+                  domains: ["webchat", "weixin", "qq", "app" ] // 启用的通道。
+                }
+                SAM.sendIMReady(options, function() {
+
+                }, function(e) {
+
+                });
+              }else{
+                SIM.stop();
+                this.agent.weChat = "未启用";
+                this.$store.state.weChatOn = false;
+                this.imgShow.chat = false;
+              }
+            }
+          },
+          //坐席登录
+          agentLogin(){
+            var paramObject = SimpleAgentUIComponent.onConnectParams();
+            console.log("obj",paramObject)
+            if(this.agent.status == '未登录'){
+              SimpleAgentMgr.connect(paramObject.accessInfo, paramObject.telOption, paramObject.agentStatus);
+              SimpleAgentMgr.addEventListener(this.onService, "initService");
+            }else if(this.agent.status == '就绪'){
+              SimpleAgentMgr.disconnect();
+            }else{
+              layer.msg("当前状态不可退出");
+            }
+          },
+          //置忙置闲
+          setBusy(){
+            if(this.agent.busy == "置忙"){
+              SAM.busy();
+            }else{
+              SAM.ready();
+            }
+          },
+          //完成
+          complete(){
+            if(!this.clickSwitch.complete){
+              // return;
+            }
+            let curTabs = this.$store.state.tabViews;
+            let a = curTabs.findIndex((value) => {
+              return value.title =="电话工单";
+            })
+            if(a == -1){this.$store.state.callOrder = true;}
+            if(this.$store.state.callOrder){
+              SAM.complete();
+              this.clickSwitch.complete = false;
+              this.$store.state.closeTab("电话工单","/workOrder1");
+            }else{
+              this.$alert('尚未保存工单信息', '提示', {
+                confirmButtonText: '确定',
+                type: 'warning',
+                lockScroll:false,
+                callback: action => {
+
+                }
+              })
+            }
+          },
+          //保持
+          holdClick(){
+            if(!this.clickSwitch.hold){
+              return;
+            }
+            if(this.agent.holdSwitch){
+              if(this.agent.hold == "保持"){
+                SAM.hold();
+              }else{
+                SAM.unhold();
+              }
+            }else{
+              lay.msg("当前状态不可进行保持操作")
+            }
+          },
+          //挂断
+          hangupClick(){
+            if(!this.clickSwitch.hangup){
+              return;
+            }
+            SAM.hangup();
+            if (QPhoneTool.qPhone && QPhoneTool.qPhone.currentCall) {
+              QPhoneTool.qPhone.currentCall.Hangup();
+            }
+          },
+          //转接坐席
+          transferToAgent:function(){
+            if(!this.clickSwitch.zhuan){
+              return;
+            }
+            simpleBar.transferAgent();
+          },
+          //呼叫电话
+          outbound(){
+            if(this.clickSwitch.call){
+              $("[clickid='imgOutbound']").eq(0).trigger("click");
+            }
+          },
+          //呼叫坐席
+          callAgent(){
+            if(this.clickSwitch.call){
+              $("[clickid='imgCallAgent']").eq(0).trigger("click");
+            }
+          },
+        },
+        mounted(){
+          let that = this;
+          let agentInfo = {};
+          if(window.getSession('agentInfo') && window.isJson(window.getSession('agentInfo'))){
+            agentInfo = JSON.parse(window.getSession('agentInfo'));
+            this.accessInfo.nick = agentInfo.trueName;
+          }
+          SimpleAgentUIComponent.onConnectParams = () => {
+            return {
+              "accessInfo": {
+                // "service_base_url": "http://118.31.169.180/", // 服务根地址
+                service_base_url:location.origin + "/onesoul/",
+                "realm": agentInfo.enterpriseName, // 企业登录名
+                "agent_id": agentInfo.enterpriseName+"."+agentInfo.loginName,
+                "agent_password": agentInfo.password,
+                "acd_node_id": "acd",
+                "nick_name": agentInfo.trueName,
+                "phone":"",
+                "1":1,
+                "phone_type":"softPhone",
+                "third_validate_url": ""
+              },
+              "telOption": {
+                "type": "softPhone", // 此为常量，请勿更改。
+                "loginMode": 3, // 1 - 永久在线(虚拟座席), 3 - 与通讯状态绑定，一旦agentbar通讯断开即认为登出
+                "transferMode": "one_step", // one_step 一步转接, two_step 二步转接
+                "phone": "1081200000210003" // 座席的电话号码。可使用直线电话号码，或者 sip 话机的地址(如 2323@domain:port )。
+              },
+              "imOption": {
+                "status": "ready", // IM 初始状态，ready 或 not_ready
+                "nick": agentInfo.trueName,  //显示名称，必填
+                "ability": 3,  // 通道能力，即同时接待客户数
+                "domains": ["webchat", "weixin" ] // 启用的通道。
+              },
+              "agentStatus": "ready", // 初始状态，可以是 ready 或 not_ready
+            };
+          }
+          SimpleAgentMgr.createAgentBarComponent("newPhoneBar");
+          // SimpleAgentMgr.addEventListener(this.onService, "initService");
+          var options = {
+            "webrtcFirst": $.query.get("webrtcFirst"),
+            "imUIObject": $("#imActions"), // IM 通道对应的 UI id
+            "baseUrl": $("#serviceUrl").val()
+          }
+          SimpleBarUI.init(options);
+          let paramObject = SimpleAgentUIComponent.onConnectParams();
+          // SimpleAgentMgr.connect(paramObject.accessInfo, paramObject.telOption,paramObject.agentStatus);
+          if(paramObject.accessInfo.phone_type == "softPhone"){
+            this.loadQPhoneComponent();
+          }
+        }
+    }
+</script>
+
+<style scoped>
+  .all{
+    width:100%;
+    height:10%;
+    background: #E4E9F8;
+    padding:0 10px;
+    box-sizing:border-box;
+    position: relative;
+    overflow: hidden;
+  }
+  .timeBox{
+    width:7%;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    float: left;
+    margin-right:10px;
+  }
+  .timeBox>div{
+    display: flex;
+    align-items: center;
+    color:#1F233E;
+  }
+  .timeBox>.title{
+    font-size: 12px;
+    height:20px;
+  }
+  .timeBox>.ka{
+    height:40%;
+    font-size: 14px;
+  }
+  .timeBox>.ka .i{
+    width:25.4%;
+    height:80%;
+    background: #d9d9d9;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .timeBox>.ka .m{
+    background: #E4E9F8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width:11.9%;
+    height:100%;
+  }
+  .annius{
+    width:60%;
+    height:100%;
+    float: left;
+  }
+  .annius>ul{
+    width:100%;
+    height:100%;
+    display: flex;
+    align-items: center;
+  }
+  .annius>ul li{
+    width:60px;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .annius>ul li>img{
+    width:33px;
+    height:auto;
+  }
+  .annius>ul>li>.zi{
+    color:#1F233E;
+    font-size: 12px;
+  }
+  .mine{
+    min-width:120px;
+    height: 100%;
+    position: absolute;
+    right:0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color:#1F233E;
+  }
+  .logout{
+    cursor: pointer;
+    margin-left:8px;
+  }
+</style>

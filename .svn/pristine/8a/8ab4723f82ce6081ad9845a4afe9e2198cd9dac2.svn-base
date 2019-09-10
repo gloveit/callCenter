@@ -1,0 +1,209 @@
+<template>
+    <div class="all">
+      <div class="timeBox">
+        <div class="title">持续时间：</div>
+        <div class="ka">
+          <span class="i">{{time.shi}}</span>
+          <span class="m">:</span>
+          <span class="i">{{time.fen}}</span>
+          <span class="m">:</span>
+          <span class="i">{{time.miao}}</span>
+        </div>
+      </div>
+      <div class="annius">
+        <ul>
+          <li>
+            <img src="@/assets/imgs/yiqiyong.png" alt="">
+            <div class="zi">已启用</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/jiuxu.png" alt="">
+            <div class="zi">就绪</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/zhixian.png" alt="">
+            <div class="zi">置闲</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/wancheng.png" alt="">
+            <div class="zi">完成</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/guaduan.png" alt="">
+            <div class="zi">挂断</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/shihui.png" alt="">
+            <div class="zi">拾回</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/zhuanjie.png" alt="">
+            <div class="zi">转接坐席</div>
+          </li>
+          <li>
+            <img src="@/assets/imgs/daifuwu.png" alt="">
+            <div class="zi">待服务</div>
+          </li>
+          <li style="margin-left:16px;">
+            <img src="@/assets/imgs/addForm.png" alt="">
+            <div class="zi">新增表单</div>
+          </li>
+        </ul>
+      </div>
+      <div class="mine">
+        <div class="name">金卡管理员</div>
+        <img src="@/assets/imgs/logout.png" @click="logout" class="logout">
+      </div>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "status-bar",
+        data(){
+          return{
+            time:{
+              shi:"",fen:'',miao:''
+            }
+          }
+        },
+        methods:{
+          logout(){
+            this.$confirm('是否退出登录?', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.logoutOk();
+            }).catch(() => {
+              console.log("退出登录操作已取消")
+            });
+
+          },
+          logoutOk(){
+            this.axios({
+              method:"post",
+              url:"/logout",
+              data:{},
+              transformRequest: [function (data) {
+                let ret = ''
+                for (let it in data) {
+                  ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+                }
+                return ret
+              }],
+              headers: {
+                'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
+              }
+            }).then((res)=> {
+              if(res.data.status == "success"){
+                this.$router.push({path:"/login"});
+                this.$root.clearUser();
+              }else{
+                this.$message.error("退出失败:"+res.data.msg);
+              }
+            })
+          }
+        },
+        mounted(){
+          let time = "12:56:34";
+          let arr = time.split(":");
+          this.time = {
+            shi:arr[0],fen:arr[1],miao:arr[2]
+          }
+        }
+    }
+</script>
+
+<style scoped>
+  .all{
+    width:100%;
+    height:10%;
+    background: #E4E9F8;
+    padding:0 10px;
+    box-sizing:border-box;
+    position: relative;
+    overflow: hidden;
+  }
+  .timeBox{
+    width:7%;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    float: left;
+    margin-right:10px;
+  }
+  .timeBox>div{
+    display: flex;
+    align-items: center;
+    color:#1F233E;
+  }
+  .timeBox>.title{
+    font-size: 12px;
+    height:20px;
+  }
+  .timeBox>.ka{
+    height:40%;
+    font-size: 14px;
+  }
+  .timeBox>.ka .i{
+    width:25.4%;
+    height:80%;
+    background: #d9d9d9;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .timeBox>.ka .m{
+    background: #E4E9F8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width:11.9%;
+    height:100%;
+  }
+  .annius{
+    width:60%;
+    height:100%;
+    float: left;
+  }
+  .annius>ul{
+    width:100%;
+    height:100%;
+    display: flex;
+    align-items: center;
+  }
+  .annius>ul li{
+    width:60px;
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .annius>ul li>img{
+    width:33px;
+    height:auto;
+  }
+  .annius>ul>li>.zi{
+    color:#1F233E;
+    font-size: 12px;
+  }
+  .mine{
+    min-width:120px;
+    height: 100%;
+    position: absolute;
+    right:0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color:#1F233E;
+  }
+  .logout{
+    cursor: pointer;
+    margin-left:8px;
+  }
+</style>

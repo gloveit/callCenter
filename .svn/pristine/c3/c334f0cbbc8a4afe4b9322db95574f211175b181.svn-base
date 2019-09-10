@@ -1,0 +1,15 @@
+<template>
+    <div>
+      这是一个测试路由
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "test"
+    }
+</script>
+
+<style scoped>
+
+</style>

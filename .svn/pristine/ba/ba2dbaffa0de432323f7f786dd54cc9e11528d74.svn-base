@@ -1,0 +1,341 @@
+<template>
+    <div class="role">
+      <div class="role_left">
+        <el-row class="tool">
+          <el-tooltip content="添加" placement="top">
+            <el-button type="success" icon="el-icon-circle-plus" circle size='small' @click="addNode"></el-button>
+          </el-tooltip>
+          <el-tooltip content="修改" placement="top">
+            <el-button type="primary" icon="el-icon-edit" circle size='small' @click="changeDep"></el-button>
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top">
+            <el-button type="danger" icon="el-icon-delete" circle size='small' @click="removeDep"></el-button>
+          </el-tooltip>
+        </el-row>
+        <el-tree
+          :data="data"
+          :props="defaultProps"
+          accordion
+          :highlight-current="true"	
+          @node-click="handleNodeClick"
+          class="role_tree"
+          :default-expand-all='true'
+          >
+        </el-tree>
+        <!-- 部门添加 -->
+        <el-dialog
+          title="部门添加"
+          :visible.sync="dialogVisible"
+          width="30%" >
+          <el-form :model="addDep" :rules="rules" ref="addDep" label-width="100px">
+            <el-form-item label="父级部门" prop="parentDepname" style="width:280x;float:left">
+              <el-input v-model="addDep.parentDepname" style="width:180px" size="small" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="部门名称" prop="dename" style="width:280x;float:left">
+              <el-input v-model="addDep.dename" style="width:180px" size="small"></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="sureDep">确 定</el-button>
+          </span>
+        </el-dialog>
+        <!-- 部门修改 -->
+        <el-dialog
+          title="部门修改"
+          :visible.sync="dialogChange"
+          width="30%" >
+          <el-form :model="changedep" :rules="changerules" ref="changedep" label-width="100px">
+            <el-form-item label="旧部门名称" prop="oldname" style="width:280x;float:left">
+              <el-input v-model="changedep.oldname" style="width:180px" size="small"   :disabled="true"></el-input>
+            </el-form-item>
+            <el-form-item label="新部门名称" prop="newname" style="width:280x;float:left">
+              <el-input v-model="changedep.newname" style="width:180px" size="small"></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogChange = false">取 消</el-button>
+            <el-button type="primary" @click="sureChangedep">确 定</el-button>
+          </span>
+        </el-dialog>
+      </div>
+      <div class="role_right">
+        <usertable/>
+      </div>
+    </div>
+</template>
+
+<script>
+import usertable from './userTable.vue'
+export default {
+  name: 'userManage',
+  components:{
+    usertable
+  },
+  data() {
+      return {
+        parentnode:"",
+        dialogVisible:false,
+        dialogChange:false,
+        root:'',
+        node:'',
+        addDep:{
+          dename:"",
+          parentDepname:''
+        },
+        changedep:{
+          oldname:'',
+          newname:''
+        },
+        rules:{
+          dename: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
+        },
+        changerules:{
+          newname: [{ required: true, message: '请输入新部门名称', trigger: 'blur' }],
+        },
+        data: [],
+        defaultProps: {
+          children: 'children',
+          label:'label'
+        }
+      };
+    },
+  methods: {
+    handleNodeClick (data,node,root) {
+     this.parentnode = data;
+    //  console.log(data.id)
+     let depId = data.id;
+     this.$store.commit('getDepartmentId',depId)
+     this.node = node;
+     this.root = root;
+     this.changedep.oldname = data.label;
+    },
+    addNode () {
+      let that = this;
+       that.dialogVisible = true;
+       that.addDep.parentDepname = that.parentnode.label;
+      //  console.log(that.parentnode.label)
+      // let parentId = that.parentnode.$treeNodeId;
+      // let name = that.addDep.dename;
+      //  this.axios({
+      //    method:"post",
+      //    url:"/department/addDepartment",
+      //    data:{
+      //      name:name,
+      //      parentId:parentId
+      //    }
+      //  }).then(res=>{
+      //    console.log(res.data)
+      //  })
+    },
+    // 确认部门添加
+    sureDep () {
+      let that = this;
+      let idep = that.addDep.dename;
+      let parentId = that.parentnode.id;
+      // console.log(parentId)
+      if(!idep || !parentId){
+        console.log(!parentId)
+        this.$message({
+          showClose: true,
+          message: '添加部门失败'
+        })
+      }else{
+        this.axios({
+          method:"post",
+          url:"/department/addDepartment",
+          params:{
+            name:idep,
+            parentId:parentId
+          }
+        }).then(res=>{
+          // console.log(res.data)
+          let status = res.data.status;
+          let data = res.data.date;
+          if(status === 'success'){
+            let {name,id} = data
+            that.parentnode.children.push({label:name,id:id});
+            that.addDep.dename = '';
+            that.dialogVisible = false ;
+            this.$message({
+                showClose: true,
+                message: '添加部门成功'
+              })
+            }
+          })
+        }
+    },
+    changeDep () {
+      console.log(this.parentnode.id)
+      this.dialogChange = true;
+    },
+    // 确认部门修改
+   sureChangedep () {
+      let that = this;
+      let name = that.changedep.newname;
+      let id = that.parentnode.id;
+      console.log(that.parentnode.id)
+      if(!name){
+        this.$message({
+          showClose: true,
+          message: '修改部门失败'
+        })
+      }else{
+        this.axios({
+          method:"post",
+          url:"/department/updateDepartment",
+          params:{
+            name:name,
+            id:id
+          }
+        }).then(res=>{
+          let status = res.data.status;
+          if(status === 'success'){
+            that.parentnode.label = name;
+            that.changedep.newname = '';
+            this.$message({
+                showClose: true,
+                message: '修改部门成功'
+            })
+          }
+        })
+      }
+      this.dialogChange = false
+   },
+   removeDep () {
+     let that = this;
+     const depname = that.parentnode.label;
+     const id= that.parentnode.id;
+     console.log(id)
+     this.$confirm('此操作将永久删除'+depname+'部门, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.axios({
+            method:"post",
+            url:"/department/deleteDepartment",
+            params:{
+              id:id
+            }
+          }).then(res=>{
+            let status = res.data.status;
+            if(status === 'success'){
+              const data = that.parentnode;
+              const parent = that.node.parent;
+              const children = parent.data.children || parent.data;
+              const index = children.findIndex(d => d.id === data.id);
+              children.splice(index, 1);
+              // for(let i=0;i<that.data.length;i++){
+              //   for(let j=0;j<that.data[i].children.length;j++){
+              //     that.data[i].children[j].children.forEach((el,index) => {
+              //       if(el.id == id){
+              //         that.data[i].children[j].children.splice(index,1)
+              //       }
+              //     });
+              //   }
+              // }
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+            }
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });          
+        });
+
+    // const data = this.parentnode
+    // const parent = this.node.parent;
+    // const children = parent.data.children || parent.data;
+    // const index = children.findIndex(d => d.id === data.id);
+    // children.splice(index, 1);
+   },
+   initDep () {
+     let that = this;
+     this.axios({
+       method:'post',
+       url:'/department/allDepartment'
+     }).then(res=>{
+       let data = res.data;
+       for(let i=0;i<data.length;i++){
+          let {name,id,} = data[i]
+          that.data.push({label:name,children:[],id:id})
+          if(data[i].children){
+            for(let j=0;j<data[i].children.length;j++){
+              let departList = [];
+              let {name,id,parentId} = data[i].children[j]
+              that.data[i].children.push({label:name,children:[],id:id,parentId:parentId});
+              if(data[i].children[j].children){
+                for(let n=0;n<data[i].children[j].children.length;n++){
+                  let {name,id,parentId} = data[i].children[j].children[n]
+                  that.data[i].children[j].children.push({label:name,children:[],id:id,parentId:parentId});
+                  // departList.push({label:name,children:[],id:id,parentId:parentId});
+                }
+                // this.$store.commit('getDepartList',departList)
+              }
+            }
+          }
+       }
+     })
+   }
+  },
+  // beforeMount () {
+  //  this.initDep()
+  // },
+  mounted () {
+    this.initDep()
+  },
+  updated () {
+    let departList = [];
+    let departL = this.data;
+    // console.log(departL)
+    for(let i=0;i<departL.length;i++){
+      for(let j=0;j<departL[i].children.length;j++){
+        let {label,id} = departL[i].children[j];
+        departList.push({label:label,id:id});
+        for(let n=0;n<departL[i].children[j].children.length;n++){
+          let {label,id} = departL[i].children[j].children[n];
+          departList.push({label:label,id:id});
+        }
+      }
+    }
+    this.$store.commit('getDepartList',departList)
+  },
+}
+</script>
+
+<style scoped>
+.role{
+  width: 100%;
+  height: 100%;
+  display:flex;
+  flex-direction:row;
+}
+.role_left{
+ width:200px;
+ height: 100%;
+ background: #fff
+}
+.role_right{
+  flex:1;
+  width:100% ;
+  height: 100%;
+  float:left;
+  /* background: #f00 */
+}
+.tool{
+   padding-left:70px;
+   padding-top:10px;
+}
+.con_icon{
+  width: 100%;
+  margin-top:10px;
+}
+.role_tree{
+  margin-top:20px
+}
+</style>

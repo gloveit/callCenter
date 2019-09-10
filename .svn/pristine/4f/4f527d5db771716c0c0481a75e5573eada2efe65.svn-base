@@ -1,0 +1,105 @@
+<template>
+  <div style="width:100%;height:100%">
+    <vue-scroll :ops="ops">
+      <div class="gdForm r1">
+        <span>地址地址</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2">
+        <span>联系人</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2 mo">
+        <span>工单类型</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2">
+        <span>备用电话</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2 mo">
+        <span>设备类型</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2">
+        <span>问题类型</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm r2 mo">
+        <span>预约时间</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm">
+        <span>问题描述</span>
+        <el-input class="inp" type="textarea" :autosize="{ minRows: 2, maxRows: 6}"></el-input>
+      </div>
+      <div class="gdForm">
+        <span>派往部门</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm">
+        <span>维修工</span>
+        <el-input class="inp" size="small"></el-input>
+      </div>
+      <div class="gdForm save">
+        <el-button type="primary" size="small">保存</el-button>
+      </div>
+    </vue-scroll>
+  </div>
+</template>
+
+<script>
+    export default {
+      name:"",
+      data() {
+        return {
+          ops:{
+            bar: {
+              background: "rgba(144,147,153,.3)",
+              // onlyShowBarOnScroll: false,
+            },
+          },
+        }
+      },
+      methods:{
+
+      }
+    }
+
+</script>
+
+<style lang="scss" scoped>
+  .gdForm{
+    width:100%;
+    display: flex;
+    align-items: center;
+    color:#1F233E;
+    font-size: 14px;
+    margin-top:10px;
+    margin-bottom:14px;
+    float: left;
+    &.r2{
+      width:46%;
+      margin-right:8%;
+    }
+    &.r2.mo{
+      margin-right:0;
+    }
+    $s:80px;
+    span{
+      width:$s;
+    }
+    .inp{
+      width:calc(100% - #{$s});
+    }
+    /deep/ .inp input.el-input__inner{
+      background:rgba(243,243,243,1);
+    }
+    /deep/ .el-textarea__inner{
+      background-color:rgba(243,243,243,1);
+    }
+    &.save{
+      justify-content: flex-end;
+    }
+  }
+</style>

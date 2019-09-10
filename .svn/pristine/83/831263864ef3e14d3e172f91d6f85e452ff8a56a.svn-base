@@ -1,0 +1,94 @@
+import Vue from 'vue'
+let VueApp = null;
+import App from './App'
+import router from './router'
+import '@/assets/js/win.js'
+import '@/assets/css/style.css'
+import vuescroll from 'vuescroll/dist/vuescroll-native';
+import 'vuescroll/dist/vuescroll.css';
+Vue.use(vuescroll);
+import store from './vuex'
+import {
+  Table as Table1,TableColumn,Input,DatePicker,Button,Tabs,TabPane,Pagination,Select,Option,Tag,
+  Message,MessageBox
+} from 'element-ui';
+Vue.config.productionTip = false;
+Vue.use(Table1);
+Vue.use(TableColumn);
+Vue.use(Input);
+Vue.use(DatePicker);
+Vue.use(Button);
+Vue.use(Tabs);
+Vue.use(Tag);
+Vue.use(TabPane);
+Vue.use(Pagination);
+Vue.use(Select);
+Vue.use(Option);
+Message.install = function (Vue, options) {
+  Vue.prototype.$message = Message
+}
+Vue.prototype.$msgbox = MessageBox;
+Vue.prototype.$confirm = MessageBox.confirm;
+Vue.use(Message);
+
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+Vue.use(VueAxios, axios)
+
+router.beforeEach((to, from, next) => {
+  let a = to.name;
+  if(store.state.authList[a]){
+    next();
+  }else{
+    Message.info("您访问的页面不存在");
+  }
+})
+
+axios.interceptors.request.use(config => {
+  return config;
+}, err => {
+  Message.error("连接失败！")
+  return Promise.resolve(err);
+})
+
+axios.interceptors.response.use((response) => {
+  if(response.data.msg == "未登陆!"){
+    VueApp.$root.clearUser();
+    router.push({path:"/login"});
+  }else{
+    return response;
+  }
+}, function (error) {
+  console.log("请求错误",error.response)
+  if (401 === error.response.status) {
+    // router.push({path:"/login"})
+  }else {
+    return Promise.reject(error);
+  }
+});
+
+window.onresize = function(){
+  location.reload();
+}
+
+VueApp = new Vue({
+  el: '#app',
+  router,
+  store,
+  components: { App },
+  template: '<App/>',
+  methods:{
+    clearUser(){
+      this.$store.state.menuList = [];
+      window.clearSession('menuList')
+      this.$store.state.menu2Active = -1;
+      window.clearSession('menu2Active')
+      this.$store.state.tabViews = [];
+      window.clearSession('tabViews');
+      this.$store.state.tabViewActive = -1;
+      window.clearSession('tabViewActive')
+      this.$store.state.authList = {index:true, login:true, home:true,};
+      window.clearSession('authList')
+    }
+  }
+})

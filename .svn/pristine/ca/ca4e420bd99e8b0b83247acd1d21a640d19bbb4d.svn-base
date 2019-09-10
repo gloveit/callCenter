@@ -1,0 +1,26 @@
+import Vue from 'vue'
+import Vuex from 'vuex'
+Vue.use(Vuex)
+const state = {
+  tabViews:[],
+  menu2Active:-1,
+  activeTitle2:-1,
+};
+const mutations = {
+  changeTabViews(state,n){
+    state.tabViews = n;
+  },
+  cmenu2Active(state,n){
+    state.menu2Active = n;
+  },
+  cactiveTitle2(state,n){
+    state.activeTitle2 = n;
+  }
+}
+
+const store = new Vuex.Store({
+  state,
+  mutations,
+});
+
+export default store

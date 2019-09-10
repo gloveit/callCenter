@@ -1,0 +1,310 @@
+<template>
+    <div class="c">
+      <div class="box">
+        <div class="i1"></div>
+        <div class="i2">
+          <div class="title">
+            <!--<img src="@/assets/imgs/login_8.0.png" alt="">-->
+            ENESYS 呼叫中心
+          </div>
+          <div class="contain">
+            <div class="t">登录</div>
+            <div class="user">
+              <div class="ico">
+                <img src="@/assets/imgs/user.png" alt="">
+              </div>
+              <input type="text" placeholder="请输入您的账号" v-model="username">
+            </div>
+            <div class="user pw">
+              <div class="ico">
+                <img src="@/assets/imgs/pw.png" alt="">
+              </div>
+              <input type="password" placeholder="请输入您的密码" v-model="password" @keyup.enter="login">
+            </div>
+            <div class="liji" @click="login">
+              {{loginStatus}}<i v-if="loading" class="el-icon-loading"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="coright">
+        ©金卡旗下北京银证出品 2018
+      </div>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "login_",
+        data(){
+          return{
+            username:"",
+            password:"",
+            loginStatus:"立即登入",
+            loading:false,
+          }
+        },
+        computed:{
+        },
+        methods:{
+          strIndex(str,index){
+            return str.indexOf(index) != -1
+          },
+          login(){
+            if(this.loginStatus=="正在登入"){
+              return;
+            }
+            this.loginStatus = "正在登入";
+            this.loading = true;
+            this.axios({
+              method:"post",
+              url:"/login",
+              params:{
+                username:this.username,
+                password:this.password
+              },
+              timeout:8000,
+            }).then((res)=>{
+              if(res.data.status == "success"){
+                this.$root.clearUser();
+                if(res.data.msg.phoneType==1){
+                  res.data.msg.agentInfo.phoneType = "pstnPhone";
+                  res.data.msg.agentInfo.phoneNum = res.data.msg.phoneNum;
+                }else{
+                  res.data.msg.agentInfo.phoneType = "softPhone";
+                  res.data.msg.agentInfo.phoneNum = "";
+                }
+                //坐席登录参数
+                this.$store.state.agentInfo = res.data.msg.agentInfo;
+                window.sessionStorage.setItem('agentInfo', JSON.stringify(res.data.msg.agentInfo));
+                let agB = this.$store.state.agentInfo.allowedButtons;
+                this.$store.state.agentButton = {
+                  callPhone:this.strIndex(agB,"callPhone"),
+                  callAgent:this.strIndex(agB,"callAgent"),
+                  invitePhone:this.strIndex(agB,"invitePhone"),
+                  inviteAgent:this.strIndex(agB,"inviteAgent"),
+                  transferAgent:this.strIndex(agB,"transferAgent"),
+                }
+                window.sessionStorage.setItem('agentButton', JSON.stringify(this.$store.state.agentButton));
+                this.getMenu(() => {
+                  this.$message.success("登录成功！");
+                  this.$router.push("/home");
+                  this.loginStatus = "立即登入";
+                  this.loading = false;
+                });
+              }else{
+                this.$message.error(res.data.msg);
+                this.loginStatus = "立即登入";
+                this.loading = false;
+              }
+            }).catch((err)=>{
+              if(err.response){
+                this.$message.error("服务器异常！错误码："+err.response.status);
+                this.loginStatus = "立即登入";
+                this.loading = false;
+              }else{
+                this.$message.error("服务器异常！请求超时！");
+                this.loginStatus = "立即登入";
+                this.loading = false;
+              }
+            })
+          },
+          getMenu(callback){
+            this.axios({
+              method:"get",
+              url:"/config/sysmenu",
+            }).then((res)=>{
+              let a = res.data;
+              // 菜单测试数据
+              /*a = [
+                {"iconCls":"menu_11","name":"运营监控","children":[
+                    {"path":"/callRecords","component":"callRecords","name":"服务记录",},
+                    {"path":"/messageRecord", "component":"messageRecord","name":"留言管理",},
+                    {"path":"/agentMonitoring", "component":"agentMonitoring", "name":"坐席监控",},
+                    {"path":"/weChat", "component":"weChat", "name":"微信聊天",},
+                  ]},
+                {"iconCls":"menu_3","name":"工单","children":[
+                    {"path":"/workOrder", "component":"workOrder", "name":"新建工单",},
+                    {"path":"/workOrderList","component":"workOrderList","name":"工单列表"},
+                    {"path":"/userInteractive","component":"userInteractive","name":"用户交互"},
+                  ]},
+                {"iconCls":"menu_12","name":"报表统计",children:[
+                    {"path":"/satisfyReport", "component":"satisfyReport", "name":"满意度报表",},
+                    {"path":"/serviceRes", "component":"serviceRes","name":"服务响应时间",},
+                    {"path":"/lineUp", "component":"lineUp", "name":"排队放弃时间",},
+                    {"path":"/seatWork", "component":"seatWork", "name":"坐席工作统计",},
+                    {"path":"/workOrderType", "component":"workOrderType", "name":"工单类型统计",},
+                  ]},
+                {"iconCls":"menu_13","name":"系统管理",children:[
+                    {"path":"/knowledgeBase", "component":"knowledgeBase", "name":"知识库管理",},
+                    {"path":"/usermanage", "component":"userManage","name":"用户管理",},
+                    {"path":"/rolemanage", "component":"roleManage", "name":"角色管理",},
+                    {"path":"/menumanage", "component":"menuManage", "name":"菜单管理",},
+                  ]},
+              ]*/
+              //存放权限列表的数组
+              let bArr = [];
+              //菜单列表
+              let menuList = [];
+              let arrT = [];//临时变量
+              a.forEach((i1) => {
+                let arrT = [];
+                i1.children.forEach((i2) => {
+                  if(i2.component){
+                    bArr.push(i2.component);
+                  }
+                  arrT.push({path:i2.path,title:i2.name});
+                })
+                menuList.push({img:require("@/assets/imgs/"+i1.iconCls+".png"),title:i1.name,children:arrT});
+              })
+              //更新菜单列表
+              this.$store.state.menuList = menuList;
+              window.sessionStorage.setItem('menuList', JSON.stringify(menuList));
+              let objTemp = {};
+              bArr.forEach((i) => {
+                objTemp[i] = true
+              })
+              //需要修改的在后面追加
+              objTemp = {
+                ...objTemp,login:true,index:true,home:true,workOrder:true,workOrder1:true,weChat:true,
+                knowledgeBase:true, articleDetail:true,changeArticle:true,addArticle:true,
+                workOrder_knowledgeBase:true, workOrder_articleDetail:true,workOrder_changeArticle:true,workOrder_addArticle:true,
+                workOrder1_knowledgeBase:true,workOrder1_articleDetail:true,workOrder1_changeArticle:true,workOrder1_addArticle:true,
+              }
+              //更新权限列表
+              this.$store.state.authList = objTemp;
+              window.sessionStorage.setItem('authList', JSON.stringify(objTemp));
+            })
+            if(typeof (callback) == "function"){
+              callback();
+            }
+          },
+        },
+        mounted(){
+
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+  @mixin wh100{
+    width:100%;
+    height:100%;
+  }
+  @mixin flex-z{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  @mixin cur{
+    cursor: pointer;
+  }
+  .c{
+    @include wh100;
+    position:relative;
+    background:linear-gradient(180deg,rgba(114,150,236,1) 0%,rgba(41,79,192,1) 100%);
+    .box{
+      width:65%;
+      height:66.7%;
+      position:absolute;
+      top:0;
+      right:0;
+      left:0;
+      bottom:0;
+      margin:auto;
+      .i1{
+        float: left;
+        width:56.8%;
+        height:100%;
+        background:url("../assets/imgs/login_bg.png") no-repeat;
+        background-size:100% 100%;
+      }
+      .i2{
+        @extend .i1;
+        width:43.2%;
+        background: #fff;
+        .title{
+          @include flex-z;
+          height:16%;
+          background:rgba(240,240,240,1);
+          font-size: 24px;
+          font-weight: bold;
+          img{
+            height:26%;
+            width:auto;
+          }
+        }
+        .contain{
+          height:84%;
+          position:relative;
+          .t{
+            @include flex-z;
+            width:100%;
+            text-align: center;
+            height:21%;
+            font-size: 24px;
+            color:#333;
+          }
+        }
+      }
+    }
+    .coright{
+      width:100%;
+      height:20px;
+      line-height: 20px;
+      font-size: 14px;
+      text-align: center;
+      position: absolute;
+      bottom:7.4%;
+      color:#fff;
+    }
+    .user{
+      width:74%;
+      height:9.6%;
+      position:absolute;
+      top:21%;
+      left:0;right:0;
+      margin:0 auto;
+      .ico{
+        @include flex-z;
+        width:12.5%;
+        height:100%;
+        float: left;
+        background: #d9d9d9;
+        img{
+          width:64%;
+        }
+      }
+      input{
+        background: #F0F0F0;
+        height:100%;
+        width:87.5%;
+        border:none;
+        box-sizing: border-box;
+        outline:none;
+        font-size: 16px;
+        padding-left:5%;
+      }
+      input::-webkit-input-placeholder{
+        color:#b3b3b3;
+        font-size: 16px;
+      }
+    }
+    .pw{
+      top:43.5%;
+    }
+    .liji{
+      @include flex-z;
+      width:74%;
+      height:9.6%;
+      position:absolute;
+      bottom:17.3%;
+      left:0;right:0;
+      margin:0 auto;
+      background: #799AFA;
+      color:#fff;
+      font-size: 18px;
+      @include cur;
+    }
+  }
+</style>
